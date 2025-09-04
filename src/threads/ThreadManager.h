@@ -1,0 +1,1 @@
+// ThreadManager.h - Placeholder
