@@ -1,8 +1,6 @@
-
 CXX = g++
-CXXFLAGS = -Wall -pthread -std=c++11
-
-SRC = $(wildcard src/game/*.cpp src/threads/*.cpp src/ui/*.cpp)
+CXXFLAGS = -Wall -pthread -std=c++11 -Isrc -Isrc/ui
+SRC = $(wildcard src/*.cpp src/game/*.cpp src/threads/*.cpp src/ui/*.cpp)
 OBJ = $(SRC:.cpp=.o)
 
 TARGET = breakout
@@ -10,7 +8,7 @@ TARGET = breakout
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lncurses
 
 clean:
 	rm -f $(OBJ) $(TARGET)
