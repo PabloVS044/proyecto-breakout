@@ -4,7 +4,7 @@
 Menu::Menu() {
     options = {
         "1. Iniciar partida",
-        "2. Instrucciones",
+        "2. Instrucciones", 
         "3. Puntajes destacados",
         "4. Salir"
     };
@@ -12,14 +12,32 @@ Menu::Menu() {
 }
 
 void Menu::display() {
-    clear(); // Limpia pantalla ncurses
-    mvprintw(0, 0, "====== BREAKOUT ======");
+    clear();
+    
+    // ASCII Art del título
+    int startY = 2;
+    mvprintw(startY++, 10, "##################################################################################");
+    mvprintw(startY++, 10, "#       ____                             __                         __           #");
+    mvprintw(startY++, 10, "#      /\\  _`\\                          /\\ \\                       /\\ \\__        #");
+    mvprintw(startY++, 10, "#      \\ \\ \\L\\ \\   _ __     __      _   \\ \\ \\/\'\\      ___    __  __\\ \\ ,_\\       #");
+    mvprintw(startY++, 10, "#       \\ \\  _ <\' /\\`\'__\\ /\'__`\\  /\'__`\\ \\ \\ , <     / __`\\ /\\ \\/\\ \\\\ \\ \\/       #");
+    mvprintw(startY++, 10, "#        \\ \\ \\L\\ \\\\ \\ \\/ /\\  __/ /\\ \\L\\.\\ \\ \\ \\\\`\\  /\\ \\L\\ \\\\ \\ \\_\\ \\\\ \\ \\_      #");
+    mvprintw(startY++, 10, "#         \\ \\____/ \\ \\_\\ \\ \\____\\\\ \\__/.\\_\\\\ \\_\\ \\_\\\\ \\____/ \\ \\____/ \\ \\__\\     #");
+    mvprintw(startY++, 10, "#          \\/___/   \\/_/  \\/____/ \\/__/\\/_/ \\/_/\\/_/ \\/___/   \\/___/   \\/__/     #");
+    mvprintw(startY++, 10, "##################################################################################");
+    
+    // Opciones del menú
+    int menuStartY = 13;
+    int menuStartX = 35;
+    
     for (size_t i = 0; i < options.size(); i++) {
-        if (i == selectedIndex)
-            mvprintw(static_cast<int>(i) + 2, 0, "> %s", options[i].c_str());
-        else
-            mvprintw(static_cast<int>(i) + 2, 0, "  %s", options[i].c_str());
+        if (i == selectedIndex) {
+            mvprintw(menuStartY + i, menuStartX - 2, "> %s", options[i].c_str());
+        } else {
+            mvprintw(menuStartY + i, menuStartX, "%s", options[i].c_str());
+        }
     }
+    
     refresh();
 }
 
@@ -30,8 +48,8 @@ int Menu::navigate() {
         ch = getch();
         if ((ch == 'w' || ch == KEY_UP) && selectedIndex > 0) selectedIndex--;
         if ((ch == 's' || ch == KEY_DOWN) && options.size() > 0 && selectedIndex < options.size() - 1) selectedIndex++;
-        if (ch == '\n') {
-            return static_cast<int>(selectedIndex); // sigue retornando int
+        if (ch == '\n' || ch == '\r') {
+            return static_cast<int>(selectedIndex);
         }
     }
 }

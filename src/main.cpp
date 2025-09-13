@@ -1,14 +1,14 @@
 #include "ui/Menu.h"
-#include "Instructions.h"
+#include "ui/Instructions.h"
 #include <ncurses.h>
 #include "game/Game.h"
 
 int main() {
-    initscr();            // Inicializa ncurses
-    noecho();             // No mostrar teclas
-    cbreak();             // Captura teclas al vuelo
-    keypad(stdscr, TRUE); // Habilita flechas
-    curs_set(0);          // Oculta cursor
+    initscr();
+    noecho();
+    cbreak();
+    keypad(stdscr, TRUE);
+    curs_set(0);
 
     Menu menu;
     bool running = true;
@@ -45,9 +45,8 @@ int main() {
                 break;
             }
         }
-
     }
 
-    endwin(); // Cierra ncurses
+    endwin();
     return 0;
 }
