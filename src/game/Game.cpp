@@ -105,9 +105,13 @@ void Game::initBlocks() {
     blockMatrix.resize(5, std::vector<bool>(10, true));
 }
 
+
 void Game::handleInput() {
-    // Capturar múltiples teclas en buffer
     int ch;
+    leftPressed = false;
+    rightPressed = false;
+    aPressed = false;
+    dPressed = false;
     while ((ch = getch()) != ERR) {
         switch (ch) {
             case KEY_LEFT:
@@ -125,7 +129,7 @@ void Game::handleInput() {
                 dPressed = true;
                 break;
             case 'q':
-            case 27: // ESC
+            case 27:
                 running = false;
                 gameSync.gameRunning = false;
                 break;

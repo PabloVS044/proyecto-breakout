@@ -10,12 +10,12 @@ void OptimizedRenderer::renderPaddle1(int x, int y, int width, int prevX) {
     
     // Borrar toda la línea del paddle primero para evitar caracteres residuales
     for (int i = 1; i < COLS - 1; i++) {
-        mvaddch(y, i, ' ');
+        if (y >= 0 && y < LINES && i >= 0 && i < COLS) mvaddch(y, i, ' ');
     }
     
     // Dibujar nueva posición usando sprites
     for (int i = 0; i < width; i++) {
-        mvaddch(y, x + i, '=');
+        if (y >= 0 && y < LINES && (x + i) >= 0 && (x + i) < COLS) mvaddch(y, x + i, '=');
     }
     
     refresh(); // Forzar actualización inmediata
@@ -29,12 +29,12 @@ void OptimizedRenderer::renderPaddle2(int x, int y, int width, int prevX) {
     
     // Borrar toda la línea del paddle primero para evitar caracteres residuales
     for (int i = 1; i < COLS - 1; i++) {
-        mvaddch(y, i, ' ');
+        if (y >= 0 && y < LINES && i >= 0 && i < COLS) mvaddch(y, i, ' ');
     }
     
     // Dibujar nueva posición usando sprites (paddle jugador 2)
     for (int i = 0; i < width; i++) {
-        mvaddch(y, x + i, '-');
+        if (y >= 0 && y < LINES && (x + i) >= 0 && (x + i) < COLS) mvaddch(y, x + i, '-');
     }
     
     refresh(); // Forzar actualización inmediata
@@ -48,11 +48,11 @@ void OptimizedRenderer::renderBall(int x, int y, int prevX, int prevY) {
     
     // Borrar posición anterior si es diferente
     if (prevX != -1 && prevY != -1 && (prevX != x || prevY != y)) {
-        mvaddch(prevY, prevX, ' ');
+        if (prevY >= 0 && prevY < LINES && prevX >= 0 && prevX < COLS) mvaddch(prevY, prevX, ' ');
     }
     
     // Dibujar nueva posición usando sprite
-    mvaddch(y, x, 'O');
+    if (y >= 0 && y < LINES && x >= 0 && x < COLS) mvaddch(y, x, 'O');
     
     gameSync->ballRegion.clearDirty();
 }
@@ -80,9 +80,9 @@ void OptimizedRenderer::renderBlocks(const std::vector<std::vector<bool>>& block
                 int blockY = startY + static_cast<int>(row);
                 
                 // Usar sprites de bloques
-                mvaddch(blockY, blockX, '[');
-                mvaddch(blockY, blockX + 1, '#');
-                mvaddch(blockY, blockX + 2, ']');
+                if (blockY >= 0 && blockY < LINES && blockX >= 0 && blockX < COLS) mvaddch(blockY, blockX, '[');
+                if (blockY >= 0 && blockY < LINES && (blockX + 1) >= 0 && (blockX + 1) < COLS) mvaddch(blockY, blockX + 1, '#');
+                if (blockY >= 0 && blockY < LINES && (blockX + 2) >= 0 && (blockX + 2) < COLS) mvaddch(blockY, blockX + 2, ']');
             }
         }
     }
@@ -109,7 +109,7 @@ void OptimizedRenderer::clearRegion(int startX, int startY, int endX, int endY) 
 }
 
 void OptimizedRenderer::drawChar(int x, int y, char c) {
-    mvaddch(y, x, c);
+    if (y >= 0 && y < LINES && x >= 0 && x < COLS) mvaddch(y, x, c);
 }
 
 void OptimizedRenderer::drawString(int x, int y, const std::string& str) {
