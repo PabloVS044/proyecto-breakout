@@ -5,9 +5,17 @@
 #include <chrono>
 
 Game::Game() : running(false), gameMode(SINGLE_PLAYER), 
-               ball(40, 20), paddle1(35, 22, 7), paddle2(35, 1, 7),
-               threadManager(this), prevPaddle1X(-1), prevPaddle2X(-1),
+               scoreboard(),
+               renderer(),
+               threadManager(this),
+               gameSync(),
+               ball(40, 20), 
+               paddle1(35, 22, 7), 
+               paddle2(35, 1, 7),
+               prevPaddle1X(-1), prevPaddle2X(-1),
                prevBallX(-1), prevBallY(-1),
+               ballStarted(false),
+               gameOver(false),
                leftPressed(false), rightPressed(false), aPressed(false), dPressed(false) {
     renderer.setGameSync(&gameSync);
     threadManager.setGameSync(&gameSync);
@@ -91,9 +99,12 @@ void Game::init() {
         paddle2.setPosition((COLS - paddle2.getWidth()) / 2, 1);
     }
     
+    resetBall();
+
     running = true;
     gameSync.gameRunning = true;
 }
+
 
 void Game::cleanup() {
     threadManager.stopThreads();
@@ -128,14 +139,21 @@ void Game::handleInput() {
             case 'D':
                 dPressed = true;
                 break;
+            case 'p':
+            case 'P':
+                if (!ballStarted) {
+                    ballStarted = true; /
+                    gameSync.ballRegion.markDirty();
+                }
+                break;
+            case ' ':
+                scoreboard.addPoints(100); 
+                gameSync.scoreRegion.markDirty();
+                break;
             case 'q':
             case 27:
                 running = false;
                 gameSync.gameRunning = false;
-                break;
-            case ' ':
-                scoreboard.addPoints(100);
-                gameSync.scoreRegion.markDirty();
                 break;
         }
     }
@@ -174,9 +192,9 @@ void Game::processKeyStates() {
             paddle2Moved = true;
         }
     }
+    (void)paddle1Moved;
+    (void)paddle2Moved;
     
-    // Resetear estados después de procesar (para permitir movimiento continuo)
-    // No resetear inmediatamente para permitir movimiento fluido
 }
 
 void Game::resetKeyStates() {
@@ -185,6 +203,14 @@ void Game::resetKeyStates() {
     aPressed = false;
     dPressed = false;
 }
+
+void Game::resetBall() {
+    
+    ball.setPosition(paddle1.getX() + paddle1.getWidth()/2, paddle1.getY() - 1);
+    ball.setVelocity(1, -1);
+    ballStarted = false;
+}
+
 
 void Game::updatePaddle1Position(int newX) {
     if (newX >= 1 && newX + paddle1.getWidth() < COLS - 1) {
@@ -209,6 +235,135 @@ void Game::updateBallPosition(int newX, int newY) {
     gameSync.ballRegion.markDirty();
 }
 
+void Game::showGameOver() {
+    cleanup();
+    clear();
+    
+    int centerY = LINES / 2;
+    int centerX = COLS / 2;
+    
+    mvprintw(centerY - 2, centerX - 10, "¡GAME OVER!");
+    mvprintw(centerY - 1, centerX - 15, "Puntuación final: %d", scoreboard.getScore());
+    mvprintw(centerY + 1, centerX - 12, "Presiona cualquier tecla");
+    mvprintw(centerY + 2, centerX - 12, "para volver al menú");
+    
+    refresh();
+ 
+    nodelay(stdscr, FALSE); 
+    getch();
+    nodelay(stdscr, TRUE);
+}
+
+void Game::updateBallPhysics() {
+    if (!ballStarted) {
+       
+        ball.setPosition(paddle1.getX() + paddle1.getWidth()/2, paddle1.getY() - 1);
+        gameSync.ballRegion.markDirty();
+        return;
+    }
+    
+    // Mover la pelota
+    int currentX = ball.getX();
+    int currentY = ball.getY();
+    int newX = currentX + ball.getVelocityX();
+    int newY = currentY + ball.getVelocityY();
+    
+    // Colisión con paredes laterales
+    if (newX <= 0 || newX >= COLS - 1) {
+        ball.reverseX();
+        newX = ball.getX(); // Mantener posición X actual
+    }
+    
+    // Colisión con pared superior
+    if (newY <= 0) {
+        ball.reverseY();
+        newY = ball.getY(); 
+    }
+    
+    
+    if (newY >= LINES - 1) {
+        if (gameMode == SINGLE_PLAYER) {
+            
+            gameOver = true;
+            running = false;
+            gameSync.gameRunning = false;
+            return;
+        } else {
+            ball.reverseY();
+            return;
+        }
+    }
+    
+    updateBallPosition(newX, newY);
+    checkCollisions();
+}
+
+
+void Game::checkCollisions() {
+  
+    if (checkPaddleCollision(paddle1)) {
+        ball.reverseY();
+        
+     
+        int paddleCenter = paddle1.getX() + paddle1.getWidth() / 2;
+        int ballOffset = ball.getX() - paddleCenter;
+        
+        if (ballOffset < -1) {
+            ball.setVelocity(-1, ball.getVelocityY());
+        } else if (ballOffset > 1) {
+            ball.setVelocity(1, ball.getVelocityY());
+        } else {
+            ball.setVelocity(0, ball.getVelocityY());
+        }
+    }
+    
+
+    if (gameMode == TWO_PLAYER && checkPaddleCollision(paddle2)) {
+        ball.reverseY();
+    }
+
+    checkBlockCollisions();
+}
+
+bool Game::checkPaddleCollision(const Paddle& paddle) {
+    return (ball.getY() >= paddle.getY() - 1 && ball.getY() <= paddle.getY() + 1) &&
+           ball.getX() >= paddle.getX() && 
+           ball.getX() < paddle.getX() + paddle.getWidth();
+}
+
+void Game::checkBlockCollisions() {
+    const int blockCols = 10;
+    const int blockWidth = 3;
+    int startXBlocks = (COLS - blockCols * blockWidth) / 2;
+    
+    for (int row = 0; row < 5; row++) {
+        for (int col = 0; col < blockCols; col++) {
+            if (!blockMatrix[row][col]) continue; 
+            
+            int blockX = startXBlocks + col * blockWidth;
+            int blockY = 3 + row;
+            
+            
+
+            // Verificar colisión
+            if (ball.getY() == blockY && 
+                ball.getX() >= blockX && ball.getX() < blockX + blockWidth) {
+                
+                blockMatrix[row][col] = false;
+                renderer.clearBlock(blockX, blockY);
+                scoreboard.addPoints(10);
+                ball.reverseY();
+                gameSync.scoreRegion.markDirty();
+                
+                return; 
+            }
+            
+            
+        }
+    }
+}
+
+
 void Game::run() {
     init();
     
@@ -221,15 +376,18 @@ void Game::run() {
     renderer.renderBlocks(blockMatrix, startXBlocks, 3);
     renderer.renderScore(scoreboard.getScore(), scoreboard.getHighScore());
     
+    mvprintw(ball.getY(), ball.getX(), "O");
+
     // Mostrar controles
     if (gameMode == SINGLE_PLAYER) {
-        mvprintw(LINES-1, 2, "Flechas/A-D para mover | ESPACIO: +puntos | Q: salir");
+        mvprintw(LINES-1, 2, "Flechas/A-D para mover | P: lanzar pelota | ESPACIO: +puntos | Q: salir");
     } else {
-        mvprintw(LINES-1, 2, "J1: Flechas | J2: A-D | ESPACIO: +puntos | Q: salir");
+        mvprintw(LINES-1, 2, "J1: Flechas | J2: A-D | P: lanzar pelota | ESPACIO: +puntos | Q: salir");
     }
     
     // Renderizado inicial de paddles
     gameSync.paddle1Region.markDirty();
+    gameSync.ballRegion.markDirty(); 
     if (gameMode == TWO_PLAYER) {
         gameSync.paddle2Region.markDirty();
     }
@@ -241,8 +399,20 @@ void Game::run() {
     
     // Loop principal del juego
     while (running && gameSync.gameRunning) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        if (prevBallX != -1 && prevBallY != -1) {
+            mvprintw(prevBallY, prevBallX, " ");
+        }
+        updateBallPhysics();
+
+        mvprintw(ball.getY(), ball.getX(), "O");
+        refresh();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     
-    cleanup();
+    if (gameOver) {
+        showGameOver();
+    } else {
+        cleanup();
+    }
 }

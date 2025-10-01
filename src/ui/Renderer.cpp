@@ -89,6 +89,20 @@ void OptimizedRenderer::renderBlocks(const std::vector<std::vector<bool>>& block
     
     gameSync->blocksRegion.clearDirty();
 }
+void OptimizedRenderer::clearBlock(int x, int y) {
+    if (!gameSync) return;
+    
+    std::lock_guard<std::mutex> lock(gameSync->screenMutex);
+    
+    // Borrar el bloque completo (3 caracteres)
+    for (int i = 0; i < 3; i++) {
+        if (y >= 0 && y < LINES && (x + i) >= 0 && (x + i) < COLS) {
+            mvaddch(y, x + i, ' ');
+        }
+    }
+    
+    refresh();
+}
 
 void OptimizedRenderer::initGameScreen() {
     clear();
