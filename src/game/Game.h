@@ -34,9 +34,17 @@ private:
     // Posiciones anteriores para optimización
     int prevPaddle1X, prevPaddle2X;
     int prevBallX, prevBallY;
+    bool ballStarted;
+    bool gameOver;
     
     void initBlocks();
     void selectGameMode();
+    void updateBallPhysics(); 
+    void checkCollisions();   
+    void resetBall();         
+    bool checkPaddleCollision(const Paddle& paddle); 
+    void checkBlockCollisions(); 
+    void showGameOver();
     
 public:
     Game();

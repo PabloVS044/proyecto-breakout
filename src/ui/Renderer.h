@@ -29,6 +29,7 @@ public:
     
     // Utilidades
     void clearRegion(int startX, int startY, int endX, int endY);
+    void clearBlock(int x, int y);
     void drawChar(int x, int y, char c);
     void drawString(int x, int y, const std::string& str);
     
@@ -54,6 +55,7 @@ public:
     void drawTitle();
     void drawMenuOptions(const std::vector<std::string>& options, size_t selected);
     
+
     int getWidth() const { return width; }
     int getHeight() const { return height; }
 };
