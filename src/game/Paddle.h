@@ -1,24 +1,48 @@
 #ifndef PADDLE_H
 #define PADDLE_H
 
+#include <chrono>
+#include <mutex>
+
 class Paddle {
 private:
     int x, y;
     int width;
     bool visible;
-
+    
+    // Control de timing interno
+    std::chrono::steady_clock::time_point lastMoveTime;
+    std::chrono::milliseconds moveInterval;
+    mutable std::mutex paddleMutex;
+    
 public:
     Paddle(int startX = 35, int startY = 22, int w = 5);
     
-    int getX() const { return x; }
-    int getY() const { return y; }
-    int getWidth() const { return width; }
-    bool isVisible() const { return visible; }
+    int getX() const { 
+        std::lock_guard<std::mutex> lock(paddleMutex);
+        return x; 
+    }
+    int getY() const { 
+        std::lock_guard<std::mutex> lock(paddleMutex);
+        return y; 
+    }
+    int getWidth() const { 
+        std::lock_guard<std::mutex> lock(paddleMutex);
+        return width; 
+    }
+    bool isVisible() const { 
+        std::lock_guard<std::mutex> lock(paddleMutex);
+        return visible; 
+    }
     
     void setPosition(int newX, int newY);
-    void setVisible(bool vis) { visible = vis; }
+    void setVisible(bool vis);
     void moveLeft();
     void moveRight();
+    bool shouldMove();  // Verificar si es tiempo de moverse
+    void resetMoveTimer();  // Resetear el timer
+    bool tryMoveLeft();   // Intentar mover izquierda si es tiempo
+    bool tryMoveRight();  // Intentar mover derecha si es tiempo
 };
 
 #endif

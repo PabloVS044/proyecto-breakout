@@ -171,30 +171,42 @@ void Game::processKeyStates() {
     if (gameMode == SINGLE_PLAYER) {
         // En modo 1 jugador, flechas y A/D controlan el mismo paddle
         if (leftPressed.load() || aPressed.load()) {
-            updatePaddle1Position(paddle1.getX() - 1);
-            paddle1Moved = true;
+            if (paddle1.tryMoveLeft()) {
+                gameSync.paddle1Region.markDirty();
+                paddle1Moved = true;
+            }
         }
         if (rightPressed.load() || dPressed.load()) {
-            updatePaddle1Position(paddle1.getX() + 1);
-            paddle1Moved = true;
+            if (paddle1.tryMoveRight()) {
+                gameSync.paddle1Region.markDirty();
+                paddle1Moved = true;
+            }
         }
     } else {
         // En modo 2 jugadores, controles independientes y simultáneos
         if (leftPressed.load()) {
-            updatePaddle1Position(paddle1.getX() - 1);
-            paddle1Moved = true;
+            if (paddle1.tryMoveLeft()) {
+                gameSync.paddle1Region.markDirty();
+                paddle1Moved = true;
+            }
         }
         if (rightPressed.load()) {
-            updatePaddle1Position(paddle1.getX() + 1);
-            paddle1Moved = true;
+            if (paddle1.tryMoveRight()) {
+                gameSync.paddle1Region.markDirty();
+                paddle1Moved = true;
+            }
         }
         if (aPressed.load()) {
-            updatePaddle2Position(paddle2.getX() - 1);
-            paddle2Moved = true;
+            if (paddle2.tryMoveLeft()) {
+                gameSync.paddle2Region.markDirty();
+                paddle2Moved = true;
+            }
         }
         if (dPressed.load()) {
-            updatePaddle2Position(paddle2.getX() + 1);
-            paddle2Moved = true;
+            if (paddle2.tryMoveRight()) {
+                gameSync.paddle2Region.markDirty();
+                paddle2Moved = true;
+            }
         }
     }
     (void)paddle1Moved;
@@ -207,6 +219,15 @@ void Game::resetKeyStates() {
     rightPressed = false;
     aPressed = false;
     dPressed = false;
+}
+
+void Game::updateGameLogic() {
+    if (!running || !gameSync.gameRunning || gameOver || gameWon) {
+        return;
+    }
+    
+    // Actualizar física de la pelota
+    updateBallPhysics();
 }
 
 void Game::resetBall() {
@@ -285,6 +306,14 @@ void Game::updateBallPhysics() {
         gameSync.ballRegion.markDirty();
         return;
     }
+    
+    // Solo mover si ha pasado suficiente tiempo
+    if (!ball.shouldMove()) {
+        return;
+    }
+    
+    // Resetear el timer y mover la pelota
+    ball.resetMoveTimer();
     
     // Mover la pelota
     int currentX = ball.getX();
@@ -506,11 +535,14 @@ void Game::run() {
     // Iniciar hilos
     threadManager.startThreads();
     
-    // Loop principal del juego - solo física, el renderizado lo hacen los hilos
-    while (running && gameSync.gameRunning) {
-        updateBallPhysics();
-        std::this_thread::sleep_for(std::chrono::milliseconds(150)); // Velocidad reducida de pelota
+    // Loop principal del juego - los hilos manejan la lógica y renderizado
+    while (running && gameSync.gameRunning && !gameOver && !gameWon) {
+        // Solo esperar y verificar estado del juego
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    
+    // Detener hilos antes de mostrar mensajes finales
+    threadManager.stopThreads();
     
     if (gameWon) {
         showGameWon();

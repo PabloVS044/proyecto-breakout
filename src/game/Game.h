@@ -10,6 +10,7 @@
 #include "Block.h"
 #include <vector>
 #include <atomic>
+#include <chrono>
 
 enum GameMode {
     SINGLE_PLAYER = 1,
@@ -61,6 +62,7 @@ public:
     void handleInput();
     void processKeyStates(); // Público para acceso desde ThreadManager
     void resetKeyStates();   // Nuevo método para resetear teclas
+    void updateGameLogic();  // Actualizar lógica principal del juego
     void updatePaddle1Position(int newX);
     void updatePaddle2Position(int newX);
     void updateBallPosition(int newX, int newY);

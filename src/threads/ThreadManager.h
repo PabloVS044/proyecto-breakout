@@ -15,9 +15,11 @@ private:
     Game* game;
     
     void inputThread();
-    void renderThread();
-    void paddle1RenderThread();
-    void paddle2RenderThread();
+    void gameLogicThread();
+    void masterRenderThread();  // Hilo principal de renderizado
+    void paddle1UpdateThread();
+    void paddle2UpdateThread();
+    void ballUpdateThread();
     
 public:
     ThreadManager(Game* gameInstance);
