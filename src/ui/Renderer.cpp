@@ -48,12 +48,17 @@ void OptimizedRenderer::renderBall(int x, int y, int prevX, int prevY) {
     
     // Borrar posición anterior si es diferente
     if (prevX != -1 && prevY != -1 && (prevX != x || prevY != y)) {
-        if (prevY >= 0 && prevY < LINES && prevX >= 0 && prevX < COLS) mvaddch(prevY, prevX, ' ');
+        if (prevY >= 0 && prevY < LINES && prevX >= 0 && prevX < COLS) {
+            mvaddch(prevY, prevX, ' ');
+        }
     }
     
     // Dibujar nueva posición usando sprite
-    if (y >= 0 && y < LINES && x >= 0 && x < COLS) mvaddch(y, x, 'O');
+    if (y >= 0 && y < LINES && x >= 0 && x < COLS) {
+        mvaddch(y, x, 'O');
+    }
     
+    refresh(); // Forzar actualización inmediata
     gameSync->ballRegion.clearDirty();
 }
 
@@ -62,8 +67,14 @@ void OptimizedRenderer::renderScore(int score, int highScore) {
     
     std::lock_guard<std::mutex> lock(gameSync->screenMutex);
     
+    // Limpiar la línea completa primero para evitar caracteres residuales
+    for (int i = 0; i < COLS; i++) {
+        mvaddch(0, i, ' ');
+    }
+    
     mvprintw(0, 2, "Score: %d   High Score: %d", score, highScore);
     
+    refresh();
     gameSync->scoreRegion.clearDirty();
 }
 
@@ -87,6 +98,7 @@ void OptimizedRenderer::renderBlocks(const std::vector<std::vector<bool>>& block
         }
     }
     
+    refresh();
     gameSync->blocksRegion.clearDirty();
 }
 void OptimizedRenderer::clearBlock(int x, int y) {

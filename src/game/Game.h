@@ -36,6 +36,7 @@ private:
     int prevBallX, prevBallY;
     bool ballStarted;
     bool gameOver;
+    bool gameWon;
     
     void initBlocks();
     void selectGameMode();
@@ -43,8 +44,10 @@ private:
     void checkCollisions();   
     void resetBall();         
     bool checkPaddleCollision(const Paddle& paddle); 
-    void checkBlockCollisions(); 
+    void checkBlockCollisions();
+    bool checkWinCondition();
     void showGameOver();
+    void showGameWon();
     
 public:
     Game();

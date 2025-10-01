@@ -112,15 +112,20 @@ void ThreadManager::renderThread() {
         
         // Renderizar pelota si cambió
         if (gameSync->ballRegion.isDirty()) {
-            // Aquí se renderizará la pelota cuando se implemente la física
+            const auto& ball = game->getBall();
+            int prevBallX = game->prevBallX;
+            int prevBallY = game->prevBallY;
+            renderer.renderBall(ball.getX(), ball.getY(), prevBallX, prevBallY);
         }
         
         // Renderizar bloques si cambiaron
         if (gameSync->blocksRegion.isDirty()) {
-            renderer.renderBlocks(game->getBlocks(), 10, 3);
+            const int blockCols = 10;
+            const int blockWidth = 3;
+            int startXBlocks = (COLS - blockCols * blockWidth) / 2;
+            renderer.renderBlocks(game->getBlocks(), startXBlocks, 3);
         }
         
-        refresh();
         std::this_thread::sleep_for(std::chrono::milliseconds(33)); // ~30 FPS para elementos menos críticos
     }
 }
