@@ -3,6 +3,8 @@
 #include <ncurses.h>
 #include <thread>
 #include <chrono>
+#include <fstream>
+#include <string>
 
 Game::Game() : running(false), gameMode(SINGLE_PLAYER), 
                scoreboard(),
@@ -68,6 +70,12 @@ void Game::selectGameMode() {
 
 void Game::init() {
     selectGameMode();
+    
+    if (gameMode == SINGLE_PLAYER) {
+        promptPlayerName();
+    } else if (gameMode == TWO_PLAYER) {
+        promptTwoPlayerNames();
+    }
     
     clear();
     nodelay(stdscr, TRUE);
@@ -273,6 +281,18 @@ void Game::showGameOver() {
     mvprintw(centerY + 1, centerX - 12, "Presiona cualquier tecla");
     mvprintw(centerY + 2, centerX - 12, "para volver al menú");
     
+    // Guardar puntaje en CSV
+    if (!playerName.empty()) {
+        std::ofstream csv("scores.csv", std::ios::app);
+        if (csv.is_open()) {
+            if (gameMode == SINGLE_PLAYER) {
+                csv << '"' << playerName << '"' << "," << scoreboard.getScore() << ",single\n";
+            } else if (gameMode == TWO_PLAYER && !player2Name.empty()) {
+                csv << '"' << playerName << '"' << "," << '"' << player2Name << '"' << "," << scoreboard.getScore() << ",multi\n";
+            }
+        }
+    }
+    
     refresh();
  
     nodelay(stdscr, FALSE); 
@@ -292,6 +312,18 @@ void Game::showGameWon() {
     mvprintw(centerY, centerX - 15, "Puntuación final: %d", scoreboard.getScore());
     mvprintw(centerY + 2, centerX - 12, "Presiona cualquier tecla");
     mvprintw(centerY + 3, centerX - 12, "para volver al menú");
+    
+    // Guardar puntaje en CSV
+    if (!playerName.empty()) {
+        std::ofstream csv("scores.csv", std::ios::app);
+        if (csv.is_open()) {
+            if (gameMode == SINGLE_PLAYER) {
+                csv << '"' << playerName << '"' << "," << scoreboard.getScore() << ",single\n";
+            } else if (gameMode == TWO_PLAYER && !player2Name.empty()) {
+                csv << '"' << playerName << '"' << "," << '"' << player2Name << '"' << "," << scoreboard.getScore() << ",multi\n";
+            }
+        }
+    }
     
     refresh();
     
@@ -551,4 +583,127 @@ void Game::run() {
     } else {
         cleanup();
     }
+}
+
+void Game::promptPlayerName() {
+    // Interfaz simple para capturar el nombre usando ncurses
+    echo();
+    curs_set(1);
+    nodelay(stdscr, FALSE);
+    clear();
+    mvprintw(LINES/2 - 1, (COLS/2) - 12, "Ingresa tu nombre:");
+    mvprintw(LINES/2 + 1, (COLS/2) - 20, "(ENTER para confirmar, máx 16 chars)");
+    refresh();
+
+    char buffer[64];
+    int maxLen = 16;
+    int idx = 0;
+    int ch;
+    int inputY = LINES/2;
+    int inputX = (COLS/2) - 12;
+    move(inputY, inputX);
+    while ((ch = getch()) != '\n' && ch != '\r') {
+        if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
+            if (idx > 0) {
+                idx--;
+                buffer[idx] = '\0';
+                mvaddch(inputY, inputX + idx, ' ');
+                move(inputY, inputX + idx);
+                refresh();
+            }
+            continue;
+        }
+        if (idx < maxLen && ch >= 32 && ch <= 126) {
+            buffer[idx++] = static_cast<char>(ch);
+            buffer[idx] = '\0';
+            mvaddch(inputY, inputX + idx - 1, ch);
+            refresh();
+        }
+    }
+    buffer[idx] = '\0';
+    playerName = std::string(buffer);
+    if (playerName.empty()) {
+        playerName = "Jugador";
+    }
+    noecho();
+    curs_set(0);
+    nodelay(stdscr, TRUE);
+}
+
+void Game::promptTwoPlayerNames() {
+    // Prompt for first player name
+    echo();
+    curs_set(1);
+    nodelay(stdscr, FALSE);
+    clear();
+    mvprintw(LINES/2 - 2, (COLS/2) - 15, "Jugador 1 - Ingresa tu nombre:");
+    mvprintw(LINES/2, (COLS/2) - 20, "(ENTER para confirmar, máx 16 chars)");
+    refresh();
+
+    char buffer[64];
+    int maxLen = 16;
+    int idx = 0;
+    int ch;
+    int inputY = LINES/2 - 1;
+    int inputX = (COLS/2) - 12;
+    move(inputY, inputX);
+    while ((ch = getch()) != '\n' && ch != '\r') {
+        if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
+            if (idx > 0) {
+                idx--;
+                buffer[idx] = '\0';
+                mvaddch(inputY, inputX + idx, ' ');
+                move(inputY, inputX + idx);
+                refresh();
+            }
+            continue;
+        }
+        if (idx < maxLen && ch >= 32 && ch <= 126) {
+            buffer[idx++] = static_cast<char>(ch);
+            buffer[idx] = '\0';
+            mvaddch(inputY, inputX + idx - 1, ch);
+            refresh();
+        }
+    }
+    buffer[idx] = '\0';
+    playerName = std::string(buffer);
+    if (playerName.empty()) {
+        playerName = "Jugador1";
+    }
+
+    // Prompt for second player name
+    clear();
+    mvprintw(LINES/2 - 2, (COLS/2) - 15, "Jugador 2 - Ingresa tu nombre:");
+    mvprintw(LINES/2, (COLS/2) - 20, "(ENTER para confirmar, máx 16 chars)");
+    refresh();
+
+    idx = 0;
+    move(inputY, inputX);
+    while ((ch = getch()) != '\n' && ch != '\r') {
+        if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
+            if (idx > 0) {
+                idx--;
+                buffer[idx] = '\0';
+                mvaddch(inputY, inputX + idx, ' ');
+                move(inputY, inputX + idx);
+                refresh();
+            }
+            continue;
+        }
+        if (idx < maxLen && ch >= 32 && ch <= 126) {
+            buffer[idx++] = static_cast<char>(ch);
+            buffer[idx] = '\0';
+            mvaddch(inputY, inputX + idx - 1, ch);
+            refresh();
+        }
+    }
+    buffer[idx] = '\0';
+    player2Name = std::string(buffer);
+    if (player2Name.empty()) {
+        player2Name = "Jugador2";
+    }
+
+    noecho();
+    curs_set(0);
+    nodelay(stdscr, TRUE);
 }

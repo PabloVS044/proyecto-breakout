@@ -11,6 +11,7 @@
 #include <vector>
 #include <atomic>
 #include <chrono>
+#include <string>
 
 enum GameMode {
     SINGLE_PLAYER = 1,
@@ -21,6 +22,8 @@ class Game {
 private:
     std::atomic<bool> running;
     GameMode gameMode;
+    std::string playerName;
+    std::string player2Name;
     Scoreboard scoreboard;
     OptimizedRenderer renderer;
     ThreadManager threadManager;
@@ -41,6 +44,8 @@ private:
     
     void initBlocks();
     void selectGameMode();
+    void promptPlayerName();
+    void promptTwoPlayerNames();
     void updateBallPhysics(); 
     void checkCollisions();   
     void resetBall();         
