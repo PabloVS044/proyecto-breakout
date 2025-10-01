@@ -1,6 +1,6 @@
 #include "Ball.h"
 
-Ball::Ball(int startX, int startY) : x(startX), y(startY), velocityX(1), velocityY(-1), visible(true), 
+Ball::Ball(int startX, int startY) : x(startX), y(startY), velocityX(0), velocityY(-1), visible(true), 
                                     moveInterval(std::chrono::milliseconds(120)) {
     lastMoveTime = std::chrono::steady_clock::now();
 }

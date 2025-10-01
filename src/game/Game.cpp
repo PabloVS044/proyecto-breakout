@@ -241,7 +241,7 @@ void Game::updateGameLogic() {
 void Game::resetBall() {
     
     ball.setPosition(paddle1.getX() + paddle1.getWidth()/2, paddle1.getY() - 1);
-    ball.setVelocity(1, -1);
+    ball.setVelocity(0, -1);
     ballStarted = false;
 }
 
@@ -399,16 +399,34 @@ void Game::checkCollisions() {
         ball.setPosition(ball.getX(), newY);
         
         // Ajustar dirección horizontal según posición en paddle
-        int paddleCenter = paddle1.getX() + paddle1.getWidth() / 2;
-        int ballOffset = ball.getX() - paddleCenter;
+        // Dividir el paddle en 5 secciones para mejor control de ángulos
+        int paddleLeft = paddle1.getX();
+        int paddleWidth = paddle1.getWidth();
+        int ballX = ball.getX();
         
-        if (ballOffset < -1) {
-            ball.setVelocity(-1, ball.getVelocityY());
-        } else if (ballOffset > 1) {
-            ball.setVelocity(1, ball.getVelocityY());
+        // Calcular posición relativa en el paddle (0.0 = izquierda, 1.0 = derecha)
+        float relativePos = static_cast<float>(ballX - paddleLeft) / static_cast<float>(paddleWidth);
+        
+        // Mapear a velocidades: extremos dan ángulo más pronunciado
+        int newVelX;
+        if (relativePos < 0.2f) {
+            // Extremo izquierdo - rebote fuerte a la izquierda
+            newVelX = -2;
+        } else if (relativePos < 0.4f) {
+            // Izquierda moderada
+            newVelX = -1;
+        } else if (relativePos < 0.6f) {
+            // Centro - rebote recto
+            newVelX = 0;
+        } else if (relativePos < 0.8f) {
+            // Derecha moderada
+            newVelX = 1;
         } else {
-            ball.setVelocity(0, ball.getVelocityY());
+            // Extremo derecho - rebote fuerte a la derecha
+            newVelX = 2;
         }
+        
+        ball.setVelocity(newVelX, ball.getVelocityY());
         
         gameSync.paddle1Region.markDirty(); // Redibujar paddle
         gameSync.ballRegion.markDirty();
@@ -424,16 +442,34 @@ void Game::checkCollisions() {
         ball.setPosition(ball.getX(), newY);
         
         // Ajustar dirección horizontal según posición en paddle2
-        int paddleCenter = paddle2.getX() + paddle2.getWidth() / 2;
-        int ballOffset = ball.getX() - paddleCenter;
+        // Dividir el paddle en 5 secciones para mejor control de ángulos
+        int paddleLeft = paddle2.getX();
+        int paddleWidth = paddle2.getWidth();
+        int ballX = ball.getX();
         
-        if (ballOffset < -1) {
-            ball.setVelocity(-1, ball.getVelocityY());
-        } else if (ballOffset > 1) {
-            ball.setVelocity(1, ball.getVelocityY());
+        // Calcular posición relativa en el paddle (0.0 = izquierda, 1.0 = derecha)
+        float relativePos = static_cast<float>(ballX - paddleLeft) / static_cast<float>(paddleWidth);
+        
+        // Mapear a velocidades: extremos dan ángulo más pronunciado
+        int newVelX;
+        if (relativePos < 0.2f) {
+            // Extremo izquierdo - rebote fuerte a la izquierda
+            newVelX = -2;
+        } else if (relativePos < 0.4f) {
+            // Izquierda moderada
+            newVelX = -1;
+        } else if (relativePos < 0.6f) {
+            // Centro - rebote recto
+            newVelX = 0;
+        } else if (relativePos < 0.8f) {
+            // Derecha moderada
+            newVelX = 1;
         } else {
-            ball.setVelocity(0, ball.getVelocityY());
+            // Extremo derecho - rebote fuerte a la derecha
+            newVelX = 2;
         }
+        
+        ball.setVelocity(newVelX, ball.getVelocityY());
         
         gameSync.paddle2Region.markDirty(); // Redibujar paddle
         gameSync.ballRegion.markDirty();
