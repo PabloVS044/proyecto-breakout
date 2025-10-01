@@ -160,6 +160,11 @@ void Game::handleInput() {
 }
 
 void Game::processKeyStates() {
+    // No permitir movimiento de paddles hasta que se lance la pelota
+    if (!ballStarted) {
+        return;
+    }
+    
     bool paddle1Moved = false;
     bool paddle2Moved = false;
     
@@ -484,9 +489,9 @@ void Game::run() {
 
     // Mostrar controles
     if (gameMode == SINGLE_PLAYER) {
-        mvprintw(LINES-1, 2, "Flechas/A-D para mover | P: lanzar pelota | ESPACIO: +puntos | Q: salir");
+        mvprintw(LINES-1, 2, "P: LANZAR PELOTA | Flechas/A-D: mover (despues de lanzar) | Q: salir");
     } else {
-        mvprintw(LINES-1, 2, "J1: Flechas | J2: A-D | P: lanzar pelota | ESPACIO: +puntos | Q: salir");
+        mvprintw(LINES-1, 2, "P: LANZAR | J1: Flechas | J2: A-D (despues de lanzar) | Q: salir");
     }
     
     // Renderizado inicial de paddles
