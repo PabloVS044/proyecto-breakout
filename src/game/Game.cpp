@@ -5,8 +5,14 @@
 #include <chrono>
 
 Game::Game() : running(false), gameMode(SINGLE_PLAYER), 
-               ball(40, 20), paddle1(35, 22, 7), paddle2(35, 1, 7),
-               threadManager(this), prevPaddle1X(-1), prevPaddle2X(-1),
+               scoreboard(),
+               renderer(),
+               threadManager(this),
+               gameSync(),
+               ball(40, 20), 
+               paddle1(35, 22, 7), 
+               paddle2(35, 1, 7),
+               prevPaddle1X(-1), prevPaddle2X(-1),
                prevBallX(-1), prevBallY(-1),
                leftPressed(false), rightPressed(false), aPressed(false), dPressed(false) {
     renderer.setGameSync(&gameSync);
@@ -174,6 +180,9 @@ void Game::processKeyStates() {
             paddle2Moved = true;
         }
     }
+    (void)paddle1Moved;
+    (void)paddle2Moved;
+    
     
     // Resetear estados después de procesar (para permitir movimiento continuo)
     // No resetear inmediatamente para permitir movimiento fluido
