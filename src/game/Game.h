@@ -10,6 +10,8 @@
 #include "Block.h"
 #include <vector>
 #include <atomic>
+#include <chrono>
+#include <string>
 
 enum GameMode {
     SINGLE_PLAYER = 1,
@@ -20,6 +22,8 @@ class Game {
 private:
     std::atomic<bool> running;
     GameMode gameMode;
+    std::string playerName;
+    std::string player2Name;
     Scoreboard scoreboard;
     OptimizedRenderer renderer;
     ThreadManager threadManager;
@@ -36,15 +40,20 @@ private:
     int prevBallX, prevBallY;
     bool ballStarted;
     bool gameOver;
+    bool gameWon;
     
     void initBlocks();
     void selectGameMode();
+    void promptPlayerName();
+    void promptTwoPlayerNames();
     void updateBallPhysics(); 
     void checkCollisions();   
     void resetBall();         
     bool checkPaddleCollision(const Paddle& paddle); 
-    void checkBlockCollisions(); 
+    void checkBlockCollisions();
+    bool checkWinCondition();
     void showGameOver();
+    void showGameWon();
     
 public:
     Game();
@@ -58,6 +67,7 @@ public:
     void handleInput();
     void processKeyStates(); // Público para acceso desde ThreadManager
     void resetKeyStates();   // Nuevo método para resetear teclas
+    void updateGameLogic();  // Actualizar lógica principal del juego
     void updatePaddle1Position(int newX);
     void updatePaddle2Position(int newX);
     void updateBallPosition(int newX, int newY);

@@ -1,5 +1,6 @@
 #include "ThreadManager.h"
 #include "../game/Game.h"
+#include "../ui/Renderer.h"
 #include <chrono>
 #include <ncurses.h>
 
@@ -12,18 +13,23 @@ ThreadManager::~ThreadManager() {
 void ThreadManager::startThreads() {
     if (!gameSync || !game) return;
     
-    // Hilo de entrada de usuario
+    // Hilo de entrada de usuario (más frecuente para mejor respuesta)
     threads.emplace_back(&ThreadManager::inputThread, this);
     
-    // Hilos de rendering específicos por región
-    threads.emplace_back(&ThreadManager::paddle1RenderThread, this);
+    // Hilo de lógica del juego
+    threads.emplace_back(&ThreadManager::gameLogicThread, this);
+    
+    // Hilos de actualización de elementos específicos
+    threads.emplace_back(&ThreadManager::paddle1UpdateThread, this);
     
     if (game->getGameMode() == TWO_PLAYER) {
-        threads.emplace_back(&ThreadManager::paddle2RenderThread, this);
+        threads.emplace_back(&ThreadManager::paddle2UpdateThread, this);
     }
     
-    // Hilo de rendering general
-    threads.emplace_back(&ThreadManager::renderThread, this);
+    threads.emplace_back(&ThreadManager::ballUpdateThread, this);
+    
+    // Hilo maestro de renderizado (coordina todo el renderizado)
+    threads.emplace_back(&ThreadManager::masterRenderThread, this);
 }
 
 void ThreadManager::stopThreads() {
@@ -49,7 +55,7 @@ void ThreadManager::inputThread() {
     auto lastKeyReset = std::chrono::steady_clock::now();
     
     while (gameSync->gameRunning && !gameSync->shouldExit) {
-        // Capturar entrada
+        // Capturar entrada con alta frecuencia para mejor respuesta
         game->handleInput();
         
         // Procesar movimiento continuo
@@ -57,48 +63,89 @@ void ThreadManager::inputThread() {
         
         // Resetear teclas cada cierto tiempo para evitar movimiento infinito
         auto now = std::chrono::steady_clock::now();
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastKeyReset).count() > 100) {
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastKeyReset).count() > 150) {
             game->resetKeyStates();
             lastKeyReset = now;
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS
+        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS, suficiente para buena respuesta
     }
 }
 
-void ThreadManager::paddle1RenderThread() {
+void ThreadManager::gameLogicThread() {
+    if (!gameSync || !game) return;
+    
+    while (gameSync->gameRunning && !gameSync->shouldExit) {
+        // Actualizar lógica del juego (colisiones, física, etc.)
+        game->updateGameLogic();
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // ~50 FPS para lógica del juego
+    }
+}
+
+void ThreadManager::paddle1UpdateThread() {
     if (!gameSync || !game) return;
     
     int prevX = -1;
     
     while (gameSync->gameRunning && !gameSync->shouldExit) {
+        // Solo verificar y renderizar si la región está marcada como sucia
         if (gameSync->paddle1Region.isDirty()) {
             const auto& paddle = game->getPaddle1();
+            int currentX = paddle.getX();
+            
             OptimizedRenderer renderer(gameSync);
-            renderer.renderPaddle1(paddle.getX(), paddle.getY(), paddle.getWidth(), prevX);
-            prevX = paddle.getX();
+            renderer.renderPaddle1(currentX, paddle.getY(), paddle.getWidth(), prevX);
+            prevX = currentX;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // Reducir frecuencia
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS para respuesta rápida
     }
 }
 
-void ThreadManager::paddle2RenderThread() {
+void ThreadManager::paddle2UpdateThread() {
     if (!gameSync || !game) return;
     
     int prevX = -1;
     
     while (gameSync->gameRunning && !gameSync->shouldExit) {
+        // Solo verificar y renderizar si la región está marcada como sucia
         if (gameSync->paddle2Region.isDirty()) {
             const auto& paddle = game->getPaddle2();
+            int currentX = paddle.getX();
+            
             OptimizedRenderer renderer(gameSync);
-            renderer.renderPaddle2(paddle.getX(), paddle.getY(), paddle.getWidth(), prevX);
-            prevX = paddle.getX();
+            renderer.renderPaddle2(currentX, paddle.getY(), paddle.getWidth(), prevX);
+            prevX = currentX;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // Reducir frecuencia
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS para respuesta rápida
     }
 }
 
-void ThreadManager::renderThread() {
+void ThreadManager::ballUpdateThread() {
+    if (!gameSync || !game) return;
+    
+    int prevX = -1, prevY = -1;
+    
+    while (gameSync->gameRunning && !gameSync->shouldExit) {
+        // Solo verificar y renderizar si la región está marcada como sucia
+        if (gameSync->ballRegion.isDirty()) {
+            const auto& ball = game->getBall();
+            int currentX = ball.getX();
+            int currentY = ball.getY();
+            
+            OptimizedRenderer renderer(gameSync);
+            renderer.renderBall(currentX, currentY, prevX, prevY);
+            prevX = currentX;
+            prevY = currentY;
+        }
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // ~50 FPS, más responsivo
+    }
+}
+
+void ThreadManager::masterRenderThread() {
     if (!gameSync || !game) return;
     
     while (gameSync->gameRunning && !gameSync->shouldExit) {
@@ -110,17 +157,17 @@ void ThreadManager::renderThread() {
             renderer.renderScore(scoreboard.getScore(), scoreboard.getHighScore());
         }
         
-        // Renderizar pelota si cambió
-        if (gameSync->ballRegion.isDirty()) {
-            // Aquí se renderizará la pelota cuando se implemente la física
-        }
-        
         // Renderizar bloques si cambiaron
         if (gameSync->blocksRegion.isDirty()) {
-            renderer.renderBlocks(game->getBlocks(), 10, 3);
+            const int blockCols = 10;
+            const int blockWidth = 3;
+            int startXBlocks = (COLS - blockCols * blockWidth) / 2;
+            renderer.renderBlocks(game->getBlocks(), startXBlocks, 3);
         }
         
-        refresh();
-        std::this_thread::sleep_for(std::chrono::milliseconds(33)); // ~30 FPS para elementos menos críticos
+        // Aplicar todos los cambios acumulados a la pantalla de forma atómica
+        gameSync->flushChangesToScreen();
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(33)); // ~30 FPS para elementos estáticos
     }
 }

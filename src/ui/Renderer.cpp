@@ -1,58 +1,73 @@
 #include "Renderer.h"
 #include <cstring>
 #include <algorithm>
+#include <cstdio>
 
 // OptimizedRenderer para el juego
 void OptimizedRenderer::renderPaddle1(int x, int y, int width, int prevX) {
     if (!gameSync) return;
     
-    std::lock_guard<std::mutex> lock(gameSync->screenMutex);
+    std::lock_guard<std::mutex> lock(gameSync->paddle1Region.regionMutex);
     
-    // Borrar toda la línea del paddle primero para evitar caracteres residuales
-    for (int i = 1; i < COLS - 1; i++) {
-        if (y >= 0 && y < LINES && i >= 0 && i < COLS) mvaddch(y, i, ' ');
+    // Borrar posición anterior si es diferente y válida
+    if (prevX != -1 && prevX != x) {
+        for (int i = 0; i < width; i++) {
+            if (y >= 0 && y < LINES && (prevX + i) >= 0 && (prevX + i) < COLS) {
+                gameSync->addScreenChange(ScreenChange(prevX + i, y, ' '));
+            }
+        }
     }
     
     // Dibujar nueva posición usando sprites
     for (int i = 0; i < width; i++) {
-        if (y >= 0 && y < LINES && (x + i) >= 0 && (x + i) < COLS) mvaddch(y, x + i, '=');
+        if (y >= 0 && y < LINES && (x + i) >= 0 && (x + i) < COLS) {
+            gameSync->addScreenChange(ScreenChange(x + i, y, '='));
+        }
     }
     
-    refresh(); // Forzar actualización inmediata
     gameSync->paddle1Region.clearDirty();
 }
 
 void OptimizedRenderer::renderPaddle2(int x, int y, int width, int prevX) {
     if (!gameSync) return;
     
-    std::lock_guard<std::mutex> lock(gameSync->screenMutex);
+    std::lock_guard<std::mutex> lock(gameSync->paddle2Region.regionMutex);
     
-    // Borrar toda la línea del paddle primero para evitar caracteres residuales
-    for (int i = 1; i < COLS - 1; i++) {
-        if (y >= 0 && y < LINES && i >= 0 && i < COLS) mvaddch(y, i, ' ');
+    // Borrar posición anterior si es diferente y válida
+    if (prevX != -1 && prevX != x) {
+        for (int i = 0; i < width; i++) {
+            if (y >= 0 && y < LINES && (prevX + i) >= 0 && (prevX + i) < COLS) {
+                gameSync->addScreenChange(ScreenChange(prevX + i, y, ' '));
+            }
+        }
     }
     
     // Dibujar nueva posición usando sprites (paddle jugador 2)
     for (int i = 0; i < width; i++) {
-        if (y >= 0 && y < LINES && (x + i) >= 0 && (x + i) < COLS) mvaddch(y, x + i, '-');
+        if (y >= 0 && y < LINES && (x + i) >= 0 && (x + i) < COLS) {
+            gameSync->addScreenChange(ScreenChange(x + i, y, '-'));
+        }
     }
     
-    refresh(); // Forzar actualización inmediata
     gameSync->paddle2Region.clearDirty();
 }
 
 void OptimizedRenderer::renderBall(int x, int y, int prevX, int prevY) {
     if (!gameSync) return;
     
-    std::lock_guard<std::mutex> lock(gameSync->screenMutex);
+    std::lock_guard<std::mutex> lock(gameSync->ballRegion.regionMutex);
     
     // Borrar posición anterior si es diferente
     if (prevX != -1 && prevY != -1 && (prevX != x || prevY != y)) {
-        if (prevY >= 0 && prevY < LINES && prevX >= 0 && prevX < COLS) mvaddch(prevY, prevX, ' ');
+        if (prevY >= 0 && prevY < LINES && prevX >= 0 && prevX < COLS) {
+            gameSync->addScreenChange(ScreenChange(prevX, prevY, ' '));
+        }
     }
     
     // Dibujar nueva posición usando sprite
-    if (y >= 0 && y < LINES && x >= 0 && x < COLS) mvaddch(y, x, 'O');
+    if (y >= 0 && y < LINES && x >= 0 && x < COLS) {
+        gameSync->addScreenChange(ScreenChange(x, y, 'O'));
+    }
     
     gameSync->ballRegion.clearDirty();
 }
@@ -60,9 +75,17 @@ void OptimizedRenderer::renderBall(int x, int y, int prevX, int prevY) {
 void OptimizedRenderer::renderScore(int score, int highScore) {
     if (!gameSync) return;
     
-    std::lock_guard<std::mutex> lock(gameSync->screenMutex);
+    std::lock_guard<std::mutex> lock(gameSync->scoreRegion.regionMutex);
     
-    mvprintw(0, 2, "Score: %d   High Score: %d", score, highScore);
+    // Limpiar solo la región necesaria para el score
+    for (int i = 0; i < 50; i++) {  // Longitud máxima esperada del score
+        gameSync->addScreenChange(ScreenChange(i, 0, ' '));
+    }
+    
+    // Formatear y añadir el texto del score
+    char scoreText[100];
+    snprintf(scoreText, sizeof(scoreText), "Score: %d   High Score: %d", score, highScore);
+    gameSync->addScreenChange(ScreenChange(2, 0, std::string(scoreText)));
     
     gameSync->scoreRegion.clearDirty();
 }
@@ -70,19 +93,34 @@ void OptimizedRenderer::renderScore(int score, int highScore) {
 void OptimizedRenderer::renderBlocks(const std::vector<std::vector<bool>>& blocks, int startX, int startY) {
     if (!gameSync) return;
     
-    std::lock_guard<std::mutex> lock(gameSync->screenMutex);
+    std::lock_guard<std::mutex> lock(gameSync->blocksRegion.regionMutex);
     
     const int blockWidth = 3;
     for (size_t row = 0; row < blocks.size(); row++) {
         for (size_t col = 0; col < blocks[row].size(); col++) {
+            int blockX = startX + static_cast<int>(col) * blockWidth;
+            int blockY = startY + static_cast<int>(row);
+            
             if (blocks[row][col]) {
-                int blockX = startX + static_cast<int>(col) * blockWidth;
-                int blockY = startY + static_cast<int>(row);
-                
                 // Usar sprites de bloques
-                if (blockY >= 0 && blockY < LINES && blockX >= 0 && blockX < COLS) mvaddch(blockY, blockX, '[');
-                if (blockY >= 0 && blockY < LINES && (blockX + 1) >= 0 && (blockX + 1) < COLS) mvaddch(blockY, blockX + 1, '#');
-                if (blockY >= 0 && blockY < LINES && (blockX + 2) >= 0 && (blockX + 2) < COLS) mvaddch(blockY, blockX + 2, ']');
+                if (blockY >= 0 && blockY < LINES && blockX >= 0 && blockX < COLS) {
+                    gameSync->addScreenChange(ScreenChange(blockX, blockY, '['));
+                }
+                if (blockY >= 0 && blockY < LINES && (blockX + 1) >= 0 && (blockX + 1) < COLS) {
+                    gameSync->addScreenChange(ScreenChange(blockX + 1, blockY, '#'));
+                }
+                if (blockY >= 0 && blockY < LINES && (blockX + 2) >= 0 && (blockX + 2) < COLS) {
+                    gameSync->addScreenChange(ScreenChange(blockX + 2, blockY, ']'));
+                }
+            } else {
+                // Limpiar bloques destruidos
+                if (blockY >= 0 && blockY < LINES) {
+                    for (int i = 0; i < blockWidth; i++) {
+                        if ((blockX + i) >= 0 && (blockX + i) < COLS) {
+                            gameSync->addScreenChange(ScreenChange(blockX + i, blockY, ' '));
+                        }
+                    }
+                }
             }
         }
     }
@@ -92,16 +130,14 @@ void OptimizedRenderer::renderBlocks(const std::vector<std::vector<bool>>& block
 void OptimizedRenderer::clearBlock(int x, int y) {
     if (!gameSync) return;
     
-    std::lock_guard<std::mutex> lock(gameSync->screenMutex);
+    std::lock_guard<std::mutex> lock(gameSync->blocksRegion.regionMutex);
     
     // Borrar el bloque completo (3 caracteres)
     for (int i = 0; i < 3; i++) {
         if (y >= 0 && y < LINES && (x + i) >= 0 && (x + i) < COLS) {
-            mvaddch(y, x + i, ' ');
+            gameSync->addScreenChange(ScreenChange(x + i, y, ' '));
         }
     }
-    
-    refresh();
 }
 
 void OptimizedRenderer::initGameScreen() {

@@ -1,5 +1,6 @@
 #include "ui/Menu.h"
 #include "ui/Instructions.h"
+#include "ui/Scores.h"
 #include <ncurses.h>
 #include "game/Game.h"
 
@@ -29,11 +30,7 @@ int main() {
             }
             case 2: // Puntajes
             {
-                clear();
-                mvprintw(0, 0, "Pantalla de puntajes (pendiente)...\n");
-                mvprintw(1, 0, "Presiona cualquier tecla para continuar...");
-                refresh();
-                getch();
+                Scores::showTop();
                 break;
             }
             case 3: // Salir
