@@ -30,8 +30,8 @@ private:
     GameSync gameSync;
     
     Ball ball;
-    Paddle paddle1; // Jugador 1 (abajo)
-    Paddle paddle2; // Jugador 2 (arriba, solo en modo 2 jugadores)
+    Paddle paddle1;
+    Paddle paddle2;
     
     std::vector<std::vector<bool>> blockMatrix;
     
@@ -71,9 +71,9 @@ public:
     
     // Métodos para hilos
     void handleInput();
-    void processKeyStates(); // Público para acceso desde ThreadManager
-    void resetKeyStates();   // Resetear estado de teclas
-    void updateGameLogic();  // Lógica principal del juego
+    void processKeyStates();
+    void resetKeyStates();
+    void updateGameLogic();
     void updatePaddle1Position(int newX);
     void updatePaddle2Position(int newX);
     void updateBallPosition(int newX, int newY);

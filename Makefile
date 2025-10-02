@@ -9,7 +9,7 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ -lncurses
 
-# Reglas generales para compilar .cpp a .o
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

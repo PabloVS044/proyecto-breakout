@@ -78,7 +78,7 @@ void OptimizedRenderer::renderScore(int score, int highScore) {
     std::lock_guard<std::mutex> lock(gameSync->scoreRegion.regionMutex);
     
     // Limpiar solo la región necesaria para el score
-    for (int i = 0; i < 50; i++) {  // Longitud máxima esperada del score
+    for (int i = 0; i < 50; i++) {
         gameSync->addScreenChange(ScreenChange(i, 0, ' '));
     }
     
@@ -147,7 +147,7 @@ void OptimizedRenderer::initGameScreen() {
 }
 
 void OptimizedRenderer::drawBorder() {
-    box(stdscr, '|', '-'); // Usar sprites de pared
+    box(stdscr, '|', '-');
 }
 
 void OptimizedRenderer::clearRegion(int startX, int startY, int endX, int endY) {

@@ -50,7 +50,7 @@ void ThreadManager::inputThread() {
     if (!gameSync || !game) return;
     
     nodelay(stdscr, TRUE);
-    timeout(0); // No esperar por entrada
+    timeout(0);
     
     auto lastKeyReset = std::chrono::steady_clock::now();
     
@@ -68,7 +68,7 @@ void ThreadManager::inputThread() {
             lastKeyReset = now;
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS, suficiente para buena respuesta
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
 }
 
@@ -79,7 +79,7 @@ void ThreadManager::gameLogicThread() {
         // Lógica del juego (colisiones, física, etc.)
         game->updateGameLogic();
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // ~50 FPS para lógica del juego
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }
 
@@ -99,7 +99,7 @@ void ThreadManager::paddle1UpdateThread() {
             prevX = currentX;
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // 60 FPS para respuesta rápida
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
 }
 
@@ -119,7 +119,7 @@ void ThreadManager::paddle2UpdateThread() {
             prevX = currentX;
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // 60 FPS para respuesta rápida
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
 }
 
@@ -141,7 +141,7 @@ void ThreadManager::ballUpdateThread() {
             prevY = currentY;
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // 50 FPS, más responsivo
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }
 
@@ -168,6 +168,6 @@ void ThreadManager::masterRenderThread() {
         // Aplicar cambios acumulados a la pantalla
         gameSync->flushChangesToScreen();
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(33)); // 30 FPS para elementos estáticos
+        std::this_thread::sleep_for(std::chrono::milliseconds(33));
     }
 }

@@ -23,7 +23,7 @@ struct ScreenChange {
 struct RenderRegion {
     int startX, startY, endX, endY;
     std::atomic<bool> needsUpdate;
-    std::mutex regionMutex;  // Mutex específico para cada región
+    std::mutex regionMutex;
     
     RenderRegion(int sx = 0, int sy = 0, int ex = 0, int ey = 0) 
         : startX(sx), startY(sy), endX(ex), endY(ey), needsUpdate(false) {}
