@@ -121,10 +121,21 @@ void Scores::showTop() {
     if (singleEntries.size() > 3) singleEntries.resize(3);
     if (multiEntries.size() > 3) multiEntries.resize(3);
 
-    int startY = 2;
-    int startX = (COLS / 2) - 25;
+    int startY = 1;
+    int centerX = COLS / 2;
 
-    mvprintw(1, startX, "PUNTAJES DESTACADOS");
+    // Banner principal
+    attron(COLOR_PAIR(1) | A_BOLD);
+    mvprintw(startY++, centerX - 35, "+===================================================================+");
+    mvprintw(startY++, centerX - 35, "|  ##### ##   ## ##  ## ###### ##### ##### #####  #####  #####    |");
+    mvprintw(startY++, centerX - 35, "|  ##  # ##   ## ### ##   ##   ## ## ##    ##     ##     ##       |");
+    mvprintw(startY++, centerX - 35, "|  ####  ##   ## ######   ##   ##### ##### ####   ##### #####     |");
+    mvprintw(startY++, centerX - 35, "|  ##    ##   ## ## ###   ##   ##  # ##    ##        ## ##        |");
+    mvprintw(startY++, centerX - 35, "|  ##    ####### ##  ##   ##   ##  # ##### ##### ##### #####      |");
+    mvprintw(startY++, centerX - 35, "+===================================================================+");
+    attroff(COLOR_PAIR(1) | A_BOLD);
+    
+    startY += 2;
 
     // Display single player scores
     displaySinglePlayerScores(singleEntries, startY);
@@ -135,71 +146,169 @@ void Scores::showTop() {
     // Display multiplayer scores
     displayTwoPlayerScores(multiEntries, startY);
 
-    mvprintw(startY + 2, startX, "Presiona cualquier tecla para regresar...");
+    startY += 2;
+    
+    // Footer decorativo
+    attron(COLOR_PAIR(7) | A_BOLD);
+    mvprintw(startY++, centerX - 32, "################################################################");
+    attroff(COLOR_PAIR(7) | A_BOLD);
+    
+    attron(COLOR_PAIR(1) | A_BOLD | A_BLINK);
+    mvprintw(startY++, centerX - 25, ">>> PRESIONA CUALQUIER TECLA PARA CONTINUAR <<<");
+    attroff(COLOR_PAIR(1) | A_BOLD | A_BLINK);
+    
+    attron(COLOR_PAIR(7) | A_BOLD);
+    mvprintw(startY, centerX - 32, "################################################################");
+    attroff(COLOR_PAIR(7) | A_BOLD);
+    
     refresh();
     getch();
 }
 
 void Scores::displaySinglePlayerScores(const std::vector<Entry>& entries, int& startY) {
-    int startX = (COLS / 2) - 20;
+    int centerX = COLS / 2;
     
-    mvprintw(startY, startX, "UN JUGADOR");
+    // Título de sección
+    attron(COLOR_PAIR(5) | A_BOLD);
+    mvprintw(startY++, centerX - 25, "+================================================+");
+    mvprintw(startY++, centerX - 25, "|  ####  UN JUGADOR - TOP 3  ####              |");
+    mvprintw(startY++, centerX - 25, "+================================================+");
+    attroff(COLOR_PAIR(5) | A_BOLD);
+    
     startY++;
     
-    // table header
-    mvprintw(startY,     startX,     "+--------------------------+---------+");
-    mvprintw(startY + 1, startX,     "| Nombre                   | Puntaje |");
-    mvprintw(startY + 2, startX,     "+--------------------------+---------+");
+    // Table header con estilo arcade
+    attron(COLOR_PAIR(3) | A_BOLD);
+    mvprintw(startY,     centerX - 25, "+---+----------------------------+-----------+");
+    mvprintw(startY + 1, centerX - 25, "| # | NOMBRE                     | PUNTAJE   |");
+    mvprintw(startY + 2, centerX - 25, "+---+----------------------------+-----------+");
+    attroff(COLOR_PAIR(3) | A_BOLD);
 
     int rowY = startY + 3;
     int shown = 0;
+    
     for (const auto& e : entries) {
         if (shown >= 3) break;
-        char nameBuf[27];
-        std::snprintf(nameBuf, sizeof(nameBuf), "%-26.26s", e.name.c_str());
-        mvprintw(rowY, startX, "| %s | %7d |", nameBuf, e.score);
+        
+        // Determinar color según posición
+        int colorPair = 3;
+        const char* medal = " ";
+        if (shown == 0) { 
+            colorPair = 2; // Oro
+            medal = "*";
+        } else if (shown == 1) { 
+            colorPair = 7; // Plata
+            medal = "*";
+        } else if (shown == 2) { 
+            colorPair = 6; // Bronce
+            medal = "*";
+        }
+        
+        char nameBuf[29];
+        std::snprintf(nameBuf, sizeof(nameBuf), "%-28.28s", e.name.c_str());
+        
+        attron(COLOR_PAIR(colorPair) | A_BOLD);
+        mvprintw(rowY, centerX - 25, "| %s |", medal);
+        mvprintw(rowY, centerX - 22, " %s | %9d |", nameBuf, e.score);
+        attroff(COLOR_PAIR(colorPair) | A_BOLD);
+        
         rowY++;
         shown++;
     }
+    
     if (shown == 0) {
-        mvprintw(rowY, startX, "| %-26s | %7s |", "(sin registros)", "-");
+        attron(COLOR_PAIR(3));
+        mvprintw(rowY, centerX - 25, "|   | %-28s | %9s |", "(sin registros)", "---");
+        attroff(COLOR_PAIR(3));
         rowY++;
     }
-    mvprintw(rowY, startX, "+--------------------------+---------+");
+    
+    // Completar hasta 3 filas si hay menos
+    while (shown < 3) {
+        attron(COLOR_PAIR(3));
+        mvprintw(rowY, centerX - 25, "|   | %-28s | %9s |", "---", "---");
+        attroff(COLOR_PAIR(3));
+        rowY++;
+        shown++;
+    }
+    
+    attron(COLOR_PAIR(3) | A_BOLD);
+    mvprintw(rowY, centerX - 25, "+---+----------------------------+-----------+");
+    attroff(COLOR_PAIR(3) | A_BOLD);
     
     startY = rowY + 1;
 }
 
 void Scores::displayTwoPlayerScores(const std::vector<Entry>& entries, int& startY) {
-    int startX = (COLS / 2) - 25;
+    int centerX = COLS / 2;
     
-    mvprintw(startY, startX, "DOS JUGADORES");
+    // Título de sección
+    attron(COLOR_PAIR(6) | A_BOLD);
+    mvprintw(startY++, centerX - 30, "+========================================================+");
+    mvprintw(startY++, centerX - 30, "|  ####  DOS JUGADORES - TOP 3  ####                    |");
+    mvprintw(startY++, centerX - 30, "+========================================================+");
+    attroff(COLOR_PAIR(6) | A_BOLD);
+    
     startY++;
     
-    // table header
-    mvprintw(startY,     startX,     "+------------------+------------------+---------+");
-    mvprintw(startY + 1, startX,     "| Jugador 1        | Jugador 2        | Puntaje |");
-    mvprintw(startY + 2, startX,     "+------------------+------------------+---------+");
+    // Table header
+    attron(COLOR_PAIR(4) | A_BOLD);
+    mvprintw(startY,     centerX - 30, "+---+--------------------+--------------------+-----------+");
+    mvprintw(startY + 1, centerX - 30, "| # | JUGADOR 1          | JUGADOR 2          | PUNTAJE   |");
+    mvprintw(startY + 2, centerX - 30, "+---+--------------------+--------------------+-----------+");
+    attroff(COLOR_PAIR(4) | A_BOLD);
 
     int rowY = startY + 3;
     int shown = 0;
+    
     for (const auto& e : entries) {
         if (shown >= 3) break;
-        char name1Buf[19], name2Buf[19];
-        std::snprintf(name1Buf, sizeof(name1Buf), "%-16.16s", e.name.c_str());
-        std::snprintf(name2Buf, sizeof(name2Buf), "%-16.16s", e.name2.c_str());
-        mvprintw(rowY, startX, "| %s | %s | %7d |", name1Buf, name2Buf, e.score);
+        
+        // Determinar color según posición
+        int colorPair = 4;
+        const char* medal = " ";
+        if (shown == 0) { 
+            colorPair = 2; // Oro
+            medal = "*";
+        } else if (shown == 1) { 
+            colorPair = 7; // Plata
+            medal = "*";
+        } else if (shown == 2) { 
+            colorPair = 6; // Bronce
+            medal = "*";
+        }
+        
+        char name1Buf[21], name2Buf[21];
+        std::snprintf(name1Buf, sizeof(name1Buf), "%-20.20s", e.name.c_str());
+        std::snprintf(name2Buf, sizeof(name2Buf), "%-20.20s", e.name2.c_str());
+        
+        attron(COLOR_PAIR(colorPair) | A_BOLD);
+        mvprintw(rowY, centerX - 30, "| %s | %s | %s | %9d |", medal, name1Buf, name2Buf, e.score);
+        attroff(COLOR_PAIR(colorPair) | A_BOLD);
+        
         rowY++;
         shown++;
     }
+    
     if (shown == 0) {
-        mvprintw(rowY, startX, "| %-16s | %-16s | %7s |", "(sin registros)", "", "-");
+        attron(COLOR_PAIR(4));
+        mvprintw(rowY, centerX - 30, "|   | %-20s | %-20s | %9s |", "(sin registros)", "", "---");
+        attroff(COLOR_PAIR(4));
         rowY++;
     }
-    mvprintw(rowY, startX, "+------------------+------------------+---------+");
+    
+    // Completar hasta 3 filas si hay menos
+    while (shown < 3) {
+        attron(COLOR_PAIR(4));
+        mvprintw(rowY, centerX - 30, "|   | %-20s | %-20s | %9s |", "---", "---", "---");
+        attroff(COLOR_PAIR(4));
+        rowY++;
+        shown++;
+    }
+    
+    attron(COLOR_PAIR(4) | A_BOLD);
+    mvprintw(rowY, centerX - 30, "+---+--------------------+--------------------+-----------+");
+    attroff(COLOR_PAIR(4) | A_BOLD);
     
     startY = rowY + 1;
 }
-
-
-

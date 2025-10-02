@@ -5,11 +5,22 @@
 #include "game/Game.h"
 
 int main() {
+    setlocale(LC_ALL, "");
     initscr();
-    noecho();
+    start_color();
     cbreak();
+    noecho();
     keypad(stdscr, TRUE);
     curs_set(0);
+
+    // Inicializar pares de colores
+    init_pair(1, COLOR_CYAN, COLOR_BLACK);
+    init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(3, COLOR_GREEN, COLOR_BLACK);
+    init_pair(4, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(5, COLOR_RED, COLOR_BLACK);
+    init_pair(6, COLOR_BLUE, COLOR_BLACK);
+    init_pair(7, COLOR_WHITE, COLOR_BLACK);
 
     Menu menu;
     bool running = true;
