@@ -491,7 +491,7 @@ void Game::updateBallPhysics() {
     }
     
     // Colisión con pared superior en modo 2 jugadores = game over
-    if (gameMode == TWO_PLAYER && newY <= 1) {
+    if (gameMode == TWO_PLAYER && newY <= 0) {
         gameOver = true;
         running = false;
         gameSync.gameRunning = false;
