@@ -23,8 +23,9 @@ public:
     void move();
     void reverseX();
     void reverseY();
-    bool shouldMove(); // Nuevo método para verificar si es tiempo de moverse
+    bool shouldMove(); // Verificar si es tiempo de moverse
     void resetMoveTimer(); // Resetear el timer
+    void setMoveSpeed(int milliseconds); // Ajustar velocidad de movimiento
 
     int getX() const { 
         std::lock_guard<std::mutex> lock(ballMutex);

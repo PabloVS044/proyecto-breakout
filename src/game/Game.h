@@ -35,6 +35,10 @@ private:
     
     std::vector<std::vector<bool>> blockMatrix;
     
+    // Sistema de niveles
+    int currentLevel;
+    static const int MAX_LEVELS = 5;
+    
     // Posiciones anteriores para optimización
     int prevPaddle1X, prevPaddle2X;
     int prevBallX, prevBallY;
@@ -43,6 +47,8 @@ private:
     bool gameWon;
     
     void initBlocks();
+    void initBlocksForLevel(int level);
+    void nextLevel();
     void selectGameMode();
     void promptPlayerName();
     void promptTwoPlayerNames();
@@ -66,8 +72,8 @@ public:
     // Métodos para hilos
     void handleInput();
     void processKeyStates(); // Público para acceso desde ThreadManager
-    void resetKeyStates();   // Nuevo método para resetear teclas
-    void updateGameLogic();  // Actualizar lógica principal del juego
+    void resetKeyStates();   // Resetear estado de teclas
+    void updateGameLogic();  // Lógica principal del juego
     void updatePaddle1Position(int newX);
     void updatePaddle2Position(int newX);
     void updateBallPosition(int newX, int newY);

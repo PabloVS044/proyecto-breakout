@@ -12,13 +12,14 @@ Game::Game() : running(false), gameMode(SINGLE_PLAYER),
                threadManager(this),
                gameSync(),
                ball(40, 20), 
-               paddle1(35, 22, 7), 
-               paddle2(35, 1, 7),
+               paddle1(35, 22, 9), 
+               paddle2(35, 3, 9),
                prevPaddle1X(-1), prevPaddle2X(-1),
                prevBallX(-1), prevBallY(-1),
                ballStarted(false),
                gameOver(false),
                gameWon(false),
+               currentLevel(3),
                leftPressed(false), rightPressed(false), aPressed(false), dPressed(false) {
     renderer.setGameSync(&gameSync);
     threadManager.setGameSync(&gameSync);
@@ -33,7 +34,8 @@ void Game::selectGameMode() {
     
     std::vector<std::string> modeOptions = {
         "1. Un jugador",
-        "2. Dos jugadores"
+        "2. Dos jugadores",
+        "3. Regresar al menu principal"
     };
     
     size_t selectedMode = 0;
@@ -41,17 +43,31 @@ void Game::selectGameMode() {
     
     while (true) {
         clear();
-        mvprintw(8, 30, "SELECCIONA MODO DE JUEGO");
+        
+        // Mostrar título del juego
+        int centerX = COLS / 2;
+        int startY = 2;
+        mvprintw(startY++, centerX - 39, "##################################################################################");
+        mvprintw(startY++, centerX - 39, "#       ____                             __                         __           #");
+        mvprintw(startY++, centerX - 39, "#      /\\  _`\\                          /\\ \\                       /\\ \\__        #");
+        mvprintw(startY++, centerX - 39, "#      \\ \\ \\L\\ \\   _ __     __      _   \\ \\ \\/\'\\      ___    __  __\\ \\ ,_\\       #");
+        mvprintw(startY++, centerX - 39, "#       \\ \\  _ <\' /\\`\'__\\ /\'__`\\  /\'__`\\ \\ \\ , <     / __`\\ /\\ \\/\\ \\\\ \\ \\/       #");
+        mvprintw(startY++, centerX - 39, "#        \\ \\ \\L\\ \\\\ \\ \\/ /\\  __/ /\\ \\L\\.\\ \\ \\ \\\\`\\  /\\ \\L\\ \\\\ \\ \\_\\ \\\\ \\ \\_      #");
+        mvprintw(startY++, centerX - 39, "#         \\ \\____/ \\ \\_\\ \\ \\____\\\\ \\__/.\\_\\\\ \\_\\ \\_\\\\ \\____/ \\ \\____/ \\ \\__\\     #");
+        mvprintw(startY++, centerX - 39, "#          \\/___/   \\/_/  \\/____/ \\/__/\\/_/ \\/_/\\/_/ \\/___/   \\/___/   \\/__/     #");
+        mvprintw(startY++, centerX - 39, "##################################################################################");
+        
+        mvprintw(startY + 2, centerX - 12, "SELECCIONA MODO DE JUEGO");
         
         for (size_t i = 0; i < modeOptions.size(); i++) {
             if (i == selectedMode) {
-                mvprintw(static_cast<int>(10 + i), 28, "> %s", modeOptions[i].c_str());
+                mvprintw(static_cast<int>(startY + 4 + i), centerX - 12, "> %s", modeOptions[i].c_str());
             } else {
-                mvprintw(static_cast<int>(10 + i), 30, "%s", modeOptions[i].c_str());
+                mvprintw(static_cast<int>(startY + 4 + i), centerX - 10, "%s", modeOptions[i].c_str());
             }
         }
         
-        mvprintw(13, 25, "Usa flechas o W/S para navegar, ENTER para seleccionar");
+        mvprintw(startY + 8, centerX - 25, "Usa flechas o W/S para navegar, ENTER para seleccionar");
         refresh();
         
         ch = getch();
@@ -61,9 +77,17 @@ void Game::selectGameMode() {
         if ((ch == 's' || ch == 'S' || ch == KEY_DOWN) && selectedMode < modeOptions.size() - 1) {
             selectedMode++;
         }
-        if (ch == '\n' || ch == '\r' || ch == ' ') {
-            gameMode = (selectedMode == 0) ? SINGLE_PLAYER : TWO_PLAYER;
-            break;
+        if (ch == '\n' || ch == '\r') {
+            if (selectedMode == 2) {
+                // Regresar al menú principal
+                return;
+            } else {
+                gameMode = (selectedMode == 0) ? SINGLE_PLAYER : TWO_PLAYER;
+                break;
+            }
+        }
+        if (ch == 27) { // ESC
+            return;
         }
     }
 }
@@ -84,6 +108,10 @@ void Game::init() {
     noecho();
     
     initBlocks();
+    
+    // Configurar velocidad de la pelota
+    ball.setMoveSpeed(120);
+    
     renderer.initGameScreen();
     
     // Inicializar regiones de rendering usando setRegion
@@ -122,15 +150,87 @@ void Game::cleanup() {
 }
 
 void Game::initBlocks() {
+    initBlocksForLevel(currentLevel);
+}
+
+void Game::initBlocksForLevel(int level) {
     blockMatrix.clear();
-    // Aumentar a 8 filas de bloques para más desafío
-    blockMatrix.resize(8, std::vector<bool>(10, true));
+    blockMatrix.resize(10, std::vector<bool>(10, false));
+    
+    switch(level) {
+        case 1: //  rectángulo completo
+            for(int i = 2; i < 8; i++) {
+                for(int j = 0; j < 10; j++) {
+                    blockMatrix[i][j] = true;
+                }
+            }
+            break;
+            
+        case 2: // Letra I
+            for(int i = 1; i < 9; i++) {
+                blockMatrix[i][4] = true;
+                blockMatrix[i][5] = true;
+            }
+            for(int j = 2; j < 8; j++) {
+                blockMatrix[1][j] = true;
+                blockMatrix[8][j] = true;
+            }
+            break;
+            
+        case 3: // Letra J
+            for(int i = 1; i < 7; i++) {
+                blockMatrix[i][6] = true;
+                blockMatrix[i][7] = true;
+            }
+            for(int j = 4; j < 8; j++) {
+                blockMatrix[7][j] = true;
+                blockMatrix[8][j] = true;
+            }
+            blockMatrix[6][3] = true;
+            blockMatrix[7][3] = true;
+            break;
+            
+        case 4: // Letra P
+            for(int i = 1; i < 9; i++) {
+                blockMatrix[i][2] = true;
+                blockMatrix[i][3] = true;
+            }
+            for(int j = 2; j < 7; j++) {
+                blockMatrix[1][j] = true;
+                blockMatrix[2][j] = true;
+                blockMatrix[4][j] = true;
+                blockMatrix[5][j] = true;
+            }
+            blockMatrix[2][6] = true;
+            blockMatrix[3][6] = true;
+            blockMatrix[4][6] = true;
+            break;
+            
+        case 5: // Letra D
+            for(int i = 1; i < 9; i++) {
+                blockMatrix[i][2] = true;
+                blockMatrix[i][3] = true;
+            }
+            for(int j = 2; j < 6; j++) {
+                blockMatrix[1][j] = true;
+                blockMatrix[2][j] = true;
+                blockMatrix[7][j] = true;
+                blockMatrix[8][j] = true;
+            }
+            blockMatrix[2][6] = true;
+            blockMatrix[3][7] = true;
+            blockMatrix[4][7] = true;
+            blockMatrix[5][7] = true;
+            blockMatrix[6][7] = true;
+            blockMatrix[7][6] = true;
+            break;
+    }
 }
 
 
 void Game::handleInput() {
     int ch;
-    // No resetear las teclas aquí - mantener el estado para movimiento continuo
+    //  mantener el estado para movimiento continuo
     while ((ch = getch()) != ERR) {
         switch (ch) {
             case KEY_LEFT:
@@ -154,10 +254,6 @@ void Game::handleInput() {
                     gameSync.ballRegion.markDirty();
                 }
                 break;
-            case ' ':
-                scoreboard.addPoints(100); 
-                gameSync.scoreRegion.markDirty();
-                break;
             case 'q':
             case 27:
                 running = false;
@@ -168,10 +264,6 @@ void Game::handleInput() {
 }
 
 void Game::processKeyStates() {
-    // No permitir movimiento de paddles hasta que se lance la pelota
-    if (!ballStarted) {
-        return;
-    }
     
     bool paddle1Moved = false;
     bool paddle2Moved = false;
@@ -234,7 +326,7 @@ void Game::updateGameLogic() {
         return;
     }
     
-    // Actualizar física de la pelota
+    // Física de la pelota
     updateBallPhysics();
 }
 
@@ -276,10 +368,23 @@ void Game::showGameOver() {
     int centerY = LINES / 2;
     int centerX = COLS / 2;
     
-    mvprintw(centerY - 2, centerX - 10, "¡GAME OVER!");
-    mvprintw(centerY - 1, centerX - 15, "Puntuación final: %d", scoreboard.getScore());
-    mvprintw(centerY + 1, centerX - 12, "Presiona cualquier tecla");
-    mvprintw(centerY + 2, centerX - 12, "para volver al menú");
+    // ASCII Art de GAME OVER centrado
+    mvprintw(centerY - 7, centerX - 14, "  ####    ##   #    # ###### ");
+    mvprintw(centerY - 6, centerX - 14, " #    #  #  #  ##  ## #      ");
+    mvprintw(centerY - 5, centerX - 14, " #      #    # # ## # #####  ");
+    mvprintw(centerY - 4, centerX - 14, " #  ### ###### #    # #      ");
+    mvprintw(centerY - 3, centerX - 14, " #    # #    # #    # #      ");
+    mvprintw(centerY - 2, centerX - 14, "  ####  #    # #    # ###### ");
+    
+    mvprintw(centerY, centerX - 14, "  ####  #    # ###### #####  ");
+    mvprintw(centerY + 1, centerX - 14, " #    # #    # #      #    # ");
+    mvprintw(centerY + 2, centerX - 14, " #    # #    # #####  #####  ");
+    mvprintw(centerY + 3, centerX - 14, " #    # #    # #      #   #  ");
+    mvprintw(centerY + 4, centerX - 14, " #    #  #  #  #      #    # ");
+    mvprintw(centerY + 5, centerX - 14, "  ####    ##   ###### #    # ");
+    
+    mvprintw(centerY + 7, centerX - 10, "Puntuación final: %d", scoreboard.getScore());
+    mvprintw(centerY + 9, centerX - 12, "Presiona ENTER para continuar");
     
     // Guardar puntaje en CSV
     if (!playerName.empty()) {
@@ -294,9 +399,13 @@ void Game::showGameOver() {
     }
     
     refresh();
- 
+    
+    // Esperar Enter
     nodelay(stdscr, FALSE); 
-    getch();
+    int ch;
+    do {
+        ch = getch();
+    } while (ch != '\n' && ch != '\r');
     nodelay(stdscr, TRUE);
 }
 
@@ -307,11 +416,19 @@ void Game::showGameWon() {
     int centerY = LINES / 2;
     int centerX = COLS / 2;
     
-    mvprintw(centerY - 3, centerX - 15, "¡¡¡FELICIDADES!!!");
-    mvprintw(centerY - 2, centerX - 15, "¡HAS GANADO EL JUEGO!");
-    mvprintw(centerY, centerX - 15, "Puntuación final: %d", scoreboard.getScore());
-    mvprintw(centerY + 2, centerX - 12, "Presiona cualquier tecla");
-    mvprintw(centerY + 3, centerX - 12, "para volver al menú");
+    // ASCII Art "YOU WIN"
+    mvprintw(centerY - 8, centerX - 23, "##   ##  #####  ##   ##    ##   ## #### ##   ##");
+    mvprintw(centerY - 7, centerX - 23, " ## ##   ##  ## ##   ##    ##   ##  ##  ###  ##");
+    mvprintw(centerY - 6, centerX - 23, "  ###    ##  ## ##   ##    ## # ##  ##  ## # ##");
+    mvprintw(centerY - 5, centerX - 23, "   ##    ##  ## ##   ##    #######  ##  ##  ###");
+    mvprintw(centerY - 4, centerX - 23, "   ##    ##  ## ##   ##    ### ###  ##  ##   ##");
+    mvprintw(centerY - 3, centerX - 23, "   ##    #####   #####     ##   ## #### ##   ##");
+    
+    mvprintw(centerY - 1, centerX - 17, "¡¡¡FELICIDADES!!!");
+    mvprintw(centerY, centerX - 17, "¡HAS COMPLETADO TODOS LOS NIVELES!");
+    mvprintw(centerY + 2, centerX - 10, "Puntuación final: %d", scoreboard.getScore());
+    mvprintw(centerY + 4, centerX - 12, "Presiona cualquier tecla");
+    mvprintw(centerY + 5, centerX - 12, "para volver al menú");
     
     // Guardar puntaje en CSV
     if (!playerName.empty()) {
@@ -334,8 +451,15 @@ void Game::showGameWon() {
 
 void Game::updateBallPhysics() {
     if (!ballStarted) {
-        ball.setPosition(paddle1.getX() + paddle1.getWidth()/2, paddle1.getY() - 1);
-        gameSync.ballRegion.markDirty();
+        // Posición de la pelota según el paddle
+        int newBallX = paddle1.getX() + paddle1.getWidth()/2;
+        int newBallY = paddle1.getY() - 1;
+        
+        // Solo marcar como dirty si la posición cambió
+        if (ball.getX() != newBallX || ball.getY() != newBallY) {
+            ball.setPosition(newBallX, newBallY);
+            gameSync.ballRegion.markDirty();
+        }
         return;
     }
     
@@ -368,7 +492,7 @@ void Game::updateBallPhysics() {
         newY = 2; // Asegurar que no se quede en el borde
     }
     
-    // Colisión con pared superior en modo 2 jugadores = pierde jugador 2
+    // Colisión con pared superior en modo 2 jugadores = game over
     if (gameMode == TWO_PLAYER && newY <= 1) {
         gameOver = true;
         running = false;
@@ -399,7 +523,7 @@ void Game::checkCollisions() {
         ball.setPosition(ball.getX(), newY);
         
         // Ajustar dirección horizontal según posición en paddle
-        // Dividir el paddle en 5 secciones para mejor control de ángulos
+        // Dividir el paddle en 5 secciones
         int paddleLeft = paddle1.getX();
         int paddleWidth = paddle1.getWidth();
         int ballX = ball.getX();
@@ -442,7 +566,7 @@ void Game::checkCollisions() {
         ball.setPosition(ball.getX(), newY);
         
         // Ajustar dirección horizontal según posición en paddle2
-        // Dividir el paddle en 5 secciones para mejor control de ángulos
+        // Dividir el paddle en 5 secciones
         int paddleLeft = paddle2.getX();
         int paddleWidth = paddle2.getWidth();
         int ballX = ball.getX();
@@ -492,9 +616,7 @@ bool Game::checkPaddleCollision(const Paddle& paddle) {
     // Verificar si la pelota está dentro del rango horizontal del paddle
     bool inRange = (ballX >= paddleX && ballX < paddleX + paddleWidth);
     
-    // Solo colisionar si la pelota se está moviendo hacia el paddle
-    // Para paddle1 (inferior): la pelota debe estar moviéndose hacia abajo (velocityY > 0)
-    // Para paddle2 (superior): la pelota debe estar moviéndose hacia arriba (velocityY < 0)
+    // Solo colisionar si la pelota hacia el paddle
     bool correctDirection = false;
     if (paddleY > LINES / 2) {
         // Paddle inferior (paddle1)
@@ -521,7 +643,7 @@ void Game::checkBlockCollisions() {
             if (!blockMatrix[row][col]) continue; 
             
             int blockX = startXBlocks + col * blockWidth;
-            int blockY = 3 + row;
+            int blockY = 5 + row;
             
             // Verificar colisión con el bloque
             if (ballY == blockY && ballX >= blockX && ballX < blockX + blockWidth) {
@@ -530,7 +652,7 @@ void Game::checkBlockCollisions() {
                 blockMatrix[row][col] = false;
                 renderer.clearBlock(blockX, blockY);
                 
-                // Añadir puntos según la fila (como en el original)
+                // Añadir puntos según la fila
                 // Filas superiores dan más puntos
                 int points = 10 * (8 - row);
                 scoreboard.addPoints(points);
@@ -549,11 +671,15 @@ void Game::checkBlockCollisions() {
                 gameSync.blocksRegion.markDirty();
                 gameSync.ballRegion.markDirty();
                 
-                // Verificar si se ganó el juego
+                // Verificar si se ganó el nivel
                 if (checkWinCondition()) {
-                    gameWon = true;
-                    running = false;
-                    gameSync.gameRunning = false;
+                    if (currentLevel < MAX_LEVELS) {
+                        nextLevel();
+                    } else {
+                        gameWon = true;
+                        running = false;
+                        gameSync.gameRunning = false;
+                    }
                 }
                 
                 return; // Solo una colisión por frame
@@ -571,6 +697,37 @@ bool Game::checkWinCondition() {
     return true; // Todos los bloques destruidos
 }
 
+void Game::nextLevel() {
+    if (currentLevel < MAX_LEVELS) {
+        currentLevel++;
+        initBlocksForLevel(currentLevel);
+        
+        // Reiniciar posición de la pelota
+        ballStarted = false;
+        ball.setPosition(paddle1.getX() + paddle1.getWidth()/2, paddle1.getY() - 1);
+        ball.setVelocity(0, 0);
+        
+        // Velocidad por nivel
+        int newSpeed = 120 - (currentLevel - 1) * 10; // Más rápido en niveles altos
+        if (newSpeed < 15) newSpeed = 15; // Velocidad mínima
+        ball.setMoveSpeed(newSpeed);
+        
+        // Mostrar mensaje de nivel
+        clear();
+        int centerY = LINES / 2;
+        int centerX = COLS / 2;
+        mvprintw(centerY, centerX - 10, "¡NIVEL %d COMPLETADO!", currentLevel - 1);
+        mvprintw(centerY + 1, centerX - 8, "Iniciando nivel %d...", currentLevel);
+        mvprintw(centerY + 2, centerX - 8, "¡Velocidad aumentada!");
+        refresh();
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    } else {
+        gameWon = true;
+        running = false;
+        gameSync.gameRunning = false;
+    }
+}
+
 
 void Game::run() {
     init();
@@ -581,7 +738,7 @@ void Game::run() {
     int startXBlocks = (COLS - blockCols * blockWidth) / 2;
     
     // Dibujar elementos estáticos iniciales
-    renderer.renderBlocks(blockMatrix, startXBlocks, 3);
+    renderer.renderBlocks(blockMatrix, startXBlocks, 5);
     renderer.renderScore(scoreboard.getScore(), scoreboard.getHighScore());
 
     // Mostrar controles
@@ -667,7 +824,7 @@ void Game::promptPlayerName() {
 }
 
 void Game::promptTwoPlayerNames() {
-    // Prompt for first player name
+    // nombre del primer jugador
     echo();
     curs_set(1);
     nodelay(stdscr, FALSE);
@@ -707,7 +864,7 @@ void Game::promptTwoPlayerNames() {
         playerName = "Jugador1";
     }
 
-    // Prompt for second player name
+    // nombre del segundo jugador
     clear();
     mvprintw(LINES/2 - 2, (COLS/2) - 15, "Jugador 2 - Ingresa tu nombre:");
     mvprintw(LINES/2, (COLS/2) - 20, "(ENTER para confirmar, máx 16 chars)");
