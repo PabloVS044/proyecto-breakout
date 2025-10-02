@@ -9,15 +9,15 @@ void Instructions::show() {
     int startY = 1;
     
     // Banner principal con estilo arcade
-    attron(COLOR_PAIR(1) | A_BOLD);
-    mvprintw(startY++, centerX - 35, "+===================================================================+");
-    mvprintw(startY++, centerX - 35, "|  ## ###   ## ####### ####### ##   ## ###### ##   ## ####### #### |");
-    mvprintw(startY++, centerX - 35, "|  ## ####  ## ##         ##   ## ##   ##   # ##   ## ##      #### |");
-    mvprintw(startY++, centerX - 35, "|  ## ## ## ## #####      ##   ####    #####  ##   ## ##      #### |");
-    mvprintw(startY++, centerX - 35, "|  ## ##  #### ##         ##   ## ##   ##   # ##   ## ##           |");
-    mvprintw(startY++, centerX - 35, "|  ## ##   ### #######    ##   ##   ## ###### ####### ####### #### |");
-    mvprintw(startY++, centerX - 35, "+===================================================================+");
+  attron(COLOR_PAIR(1) | A_BOLD);
+    mvprintw(startY++, centerX - 42, " .___                 __                             .__                  ");
+    mvprintw(startY++, centerX - 42, " |   | ____   _______/  |________ __ __   ____  ____ |__| ____   ____   ");
+    mvprintw(startY++, centerX - 42, " |   |/    \\ /  ___/\\   __\\_  __ \\  |  \\_/ ___\\/ ___\\|  |/  _ \\ /    \\  ");
+    mvprintw(startY++, centerX - 42, " |   |   |  \\\\___ \\  |  |  |  | \\/  |  /\\  \\__\\  \\___|  (  <_> )   |  \\ ");
+    mvprintw(startY++, centerX - 42, " |___|___|  /____  > |__|  |__|  |____/  \\___  >___  >__|\\____/|___|  / ");
+    mvprintw(startY++, centerX - 42, "          \\/     \\/                          \\/    \\/               \\/  ");
     attroff(COLOR_PAIR(1) | A_BOLD);
+
     
     startY += 2;
     

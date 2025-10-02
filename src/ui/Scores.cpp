@@ -126,14 +126,14 @@ void Scores::showTop() {
 
     // Banner principal
     attron(COLOR_PAIR(1) | A_BOLD);
-    mvprintw(startY++, centerX - 35, "+===================================================================+");
-    mvprintw(startY++, centerX - 35, "|  ##### ##   ## ##  ## ###### ##### ##### #####  #####  #####    |");
-    mvprintw(startY++, centerX - 35, "|  ##  # ##   ## ### ##   ##   ## ## ##    ##     ##     ##       |");
-    mvprintw(startY++, centerX - 35, "|  ####  ##   ## ######   ##   ##### ##### ####   ##### #####     |");
-    mvprintw(startY++, centerX - 35, "|  ##    ##   ## ## ###   ##   ##  # ##    ##        ## ##        |");
-    mvprintw(startY++, centerX - 35, "|  ##    ####### ##  ##   ##   ##  # ##### ##### ##### #####      |");
-    mvprintw(startY++, centerX - 35, "+===================================================================+");
+    mvprintw(startY++, centerX - 38, "                         __              __               ");
+    mvprintw(startY++, centerX - 38, "    ______  __ __  _____/  |______      |__| ____   ______");
+    mvprintw(startY++, centerX - 38, "    \\____ \\|  |  \\/    \\   __\\__  \\     |  |/ __ \\ /  ___/");
+    mvprintw(startY++, centerX - 38, "    |  |_> >  |  /   |  \\  |  / __ \\_   |  \\  ___/ \\___ \\ ");
+    mvprintw(startY++, centerX - 38, "    |   __/|____/|___|  /__| (____  /\\__|  |\\___  >____  >");
+    mvprintw(startY++, centerX - 38, "    |__|              \\/          \\/______|    \\/     \\/ ");
     attroff(COLOR_PAIR(1) | A_BOLD);
+
     
     startY += 2;
 
