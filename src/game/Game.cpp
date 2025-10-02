@@ -19,7 +19,7 @@ Game::Game() : running(false), gameMode(SINGLE_PLAYER),
                ballStarted(false),
                gameOver(false),
                gameWon(false),
-               currentLevel(3),
+               currentLevel(1),
                leftPressed(false), rightPressed(false), aPressed(false), dPressed(false) {
     renderer.setGameSync(&gameSync);
     threadManager.setGameSync(&gameSync);
