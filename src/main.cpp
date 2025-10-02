@@ -17,23 +17,23 @@ int main() {
     while (running) {
         int choice = menu.navigate();
         switch (choice) {
-            case 0: // Iniciar partida
+            case 0:
             {
                 Game game;
                 game.run();
                 break;
             }
-            case 1: // Instrucciones
+            case 1:
             {
                 Instructions::show();
                 break;
             }
-            case 2: // Puntajes
+            case 2:
             {
                 Scores::showTop();
                 break;
             }
-            case 3: // Salir
+            case 3:
             {
                 clear();
                 mvprintw(0, 0, "Saliendo del juego.\n");

@@ -39,10 +39,10 @@ public:
     void setVisible(bool vis);
     void moveLeft();
     void moveRight();
-    bool shouldMove();  // Verificar si es tiempo de moverse
-    void resetMoveTimer();  // Resetear el timer
-    bool tryMoveLeft();   // Intentar mover izquierda si es tiempo
-    bool tryMoveRight();  // Intentar mover derecha si es tiempo
+    bool shouldMove();
+    void resetMoveTimer();
+    bool tryMoveLeft();
+    bool tryMoveRight();
 };
 
 #endif

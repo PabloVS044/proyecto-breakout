@@ -86,7 +86,7 @@ void Game::selectGameMode() {
                 break;
             }
         }
-        if (ch == 27) { // ESC
+        if (ch == 27) {
             return;
         }
     }
@@ -158,7 +158,7 @@ void Game::initBlocksForLevel(int level) {
     blockMatrix.resize(10, std::vector<bool>(10, false));
     
     switch(level) {
-        case 1: //  rectángulo completo
+        case 1:
             for(int i = 2; i < 8; i++) {
                 for(int j = 0; j < 10; j++) {
                     blockMatrix[i][j] = true;
@@ -166,7 +166,7 @@ void Game::initBlocksForLevel(int level) {
             }
             break;
             
-        case 2: // Letra I
+        case 2:
             for(int i = 1; i < 9; i++) {
                 blockMatrix[i][4] = true;
                 blockMatrix[i][5] = true;
@@ -177,7 +177,7 @@ void Game::initBlocksForLevel(int level) {
             }
             break;
             
-        case 3: // Letra J
+        case 3:
             for(int i = 1; i < 7; i++) {
                 blockMatrix[i][6] = true;
                 blockMatrix[i][7] = true;
@@ -190,7 +190,7 @@ void Game::initBlocksForLevel(int level) {
             blockMatrix[7][3] = true;
             break;
             
-        case 4: // Letra P
+        case 4:
             for(int i = 1; i < 9; i++) {
                 blockMatrix[i][2] = true;
                 blockMatrix[i][3] = true;
@@ -206,7 +206,7 @@ void Game::initBlocksForLevel(int level) {
             blockMatrix[4][6] = true;
             break;
             
-        case 5: // Letra D
+        case 5:
             for(int i = 1; i < 9; i++) {
                 blockMatrix[i][2] = true;
                 blockMatrix[i][3] = true;
@@ -480,16 +480,16 @@ void Game::updateBallPhysics() {
     // Colisión con paredes laterales
     if (newX <= 1) {
         ball.reverseX();
-        newX = 2; // Asegurar que no se quede en el borde
+        newX = 2;
     } else if (newX >= COLS - 2) {
         ball.reverseX();
-        newX = COLS - 3; // Asegurar que no se quede en el borde
+        newX = COLS - 3;
     }
     
     // Colisión con pared superior (solo en modo 1 jugador)
     if (gameMode == SINGLE_PLAYER && newY <= 1) {
         ball.reverseY();
-        newY = 2; // Asegurar que no se quede en el borde
+        newY = 2;
     }
     
     // Colisión con pared superior en modo 2 jugadores = game over
@@ -552,9 +552,9 @@ void Game::checkCollisions() {
         
         ball.setVelocity(newVelX, ball.getVelocityY());
         
-        gameSync.paddle1Region.markDirty(); // Redibujar paddle
+        gameSync.paddle1Region.markDirty();
         gameSync.ballRegion.markDirty();
-        return; // Evitar múltiples colisiones en el mismo frame
+        return;
     }
     
     // Verificar colisión con paddle2 (superior) en modo 2 jugadores
@@ -595,9 +595,9 @@ void Game::checkCollisions() {
         
         ball.setVelocity(newVelX, ball.getVelocityY());
         
-        gameSync.paddle2Region.markDirty(); // Redibujar paddle
+        gameSync.paddle2Region.markDirty();
         gameSync.ballRegion.markDirty();
-        return; // Evitar múltiples colisiones en el mismo frame
+        return;
     }
 
     checkBlockCollisions();
@@ -691,10 +691,10 @@ void Game::checkBlockCollisions() {
 bool Game::checkWinCondition() {
     for (const auto& row : blockMatrix) {
         for (bool block : row) {
-            if (block) return false; // Aún hay bloques
+            if (block) return false;
         }
     }
-    return true; // Todos los bloques destruidos
+    return true;
 }
 
 void Game::nextLevel() {
@@ -708,8 +708,8 @@ void Game::nextLevel() {
         ball.setVelocity(0, 0);
         
         // Velocidad por nivel
-        int newSpeed = 120 - (currentLevel - 1) * 10; // Más rápido en niveles altos
-        if (newSpeed < 15) newSpeed = 15; // Velocidad mínima
+        int newSpeed = 120 - (currentLevel - 1) * 10;
+        if (newSpeed < 15) newSpeed = 15;
         ball.setMoveSpeed(newSpeed);
         
         // Mostrar mensaje de nivel

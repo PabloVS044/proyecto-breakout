@@ -5,7 +5,7 @@
 
 class Scoreboard {
 public:
-    int score; // Público para fácil acceso
+    int score;
     
 private:
     int highScore;
@@ -19,4 +19,4 @@ public:
     int getHighScore() const { return highScore; }
 };
 
-#endif // SCOREBOARD_H
+#endif

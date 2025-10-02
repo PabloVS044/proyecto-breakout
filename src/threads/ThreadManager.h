@@ -6,7 +6,7 @@
 #include <vector>
 #include <memory>
 
-class Game; // Forward declaration
+class Game;
 
 class ThreadManager {
 private:
@@ -16,7 +16,7 @@ private:
     
     void inputThread();
     void gameLogicThread();
-    void masterRenderThread();  // Hilo principal de renderizado
+    void masterRenderThread();
     void paddle1UpdateThread();
     void paddle2UpdateThread();
     void ballUpdateThread();
