@@ -42,7 +42,7 @@ void OptimizedRenderer::renderPaddle2(int x, int y, int width, int prevX) {
         }
     }
     
-    // Dibujar nueva posición usando sprites (paddle jugador 2)
+    // Dibujar posición usando sprites (paddle jugador 2)
     for (int i = 0; i < width; i++) {
         if (y >= 0 && y < LINES && (x + i) >= 0 && (x + i) < COLS) {
             gameSync->addScreenChange(ScreenChange(x + i, y, '-'));

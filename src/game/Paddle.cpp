@@ -1,7 +1,11 @@
 #include "Paddle.h"
 #include <ncurses.h>
 
-Paddle::Paddle(int startX, int startY, int w) : x(startX), y(startY), width(w), visible(true),
+Paddle::Paddle    if (x + width < COLS - 1) {
+        x++;
+        lastMoveTime = std::chrono::steady_clock::now();
+        return true;
+    }startX, int startY, int w) : x(startX), y(startY), width(w), visible(true),
                                                 moveInterval(std::chrono::milliseconds(16)) { // ~60 FPS
     lastMoveTime = std::chrono::steady_clock::now();
 }
@@ -45,7 +49,7 @@ bool Paddle::tryMoveLeft() {
     std::lock_guard<std::mutex> lock(paddleMutex);
     if (x > 1) {
         x--;
-        lastMoveTime = std::chrono::steady_clock::now(); // Actualizar tiempo directamente
+        lastMoveTime = std::chrono::steady_clock::now();
         return true;
     }
     return false;
@@ -59,7 +63,7 @@ bool Paddle::tryMoveRight() {
     std::lock_guard<std::mutex> lock(paddleMutex);
     if (x + width < COLS - 2) {
         x++;
-        lastMoveTime = std::chrono::steady_clock::now(); // Actualizar tiempo directamente
+        lastMoveTime = std::chrono::steady_clock::now();
         return true;
     }
     return false;

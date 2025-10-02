@@ -13,13 +13,13 @@ ThreadManager::~ThreadManager() {
 void ThreadManager::startThreads() {
     if (!gameSync || !game) return;
     
-    // Hilo de entrada de usuario (más frecuente para mejor respuesta)
+    // Hilo de entrada de usuario
     threads.emplace_back(&ThreadManager::inputThread, this);
     
     // Hilo de lógica del juego
     threads.emplace_back(&ThreadManager::gameLogicThread, this);
     
-    // Hilos de actualización de elementos específicos
+    // Hilos de elementos específicos
     threads.emplace_back(&ThreadManager::paddle1UpdateThread, this);
     
     if (game->getGameMode() == TWO_PLAYER) {
@@ -55,7 +55,7 @@ void ThreadManager::inputThread() {
     auto lastKeyReset = std::chrono::steady_clock::now();
     
     while (gameSync->gameRunning && !gameSync->shouldExit) {
-        // Capturar entrada con alta frecuencia para mejor respuesta
+        // Capturar entrada del usuario
         game->handleInput();
         
         // Procesar movimiento continuo
@@ -76,7 +76,7 @@ void ThreadManager::gameLogicThread() {
     if (!gameSync || !game) return;
     
     while (gameSync->gameRunning && !gameSync->shouldExit) {
-        // Actualizar lógica del juego (colisiones, física, etc.)
+        // Lógica del juego (colisiones, física, etc.)
         game->updateGameLogic();
         
         std::this_thread::sleep_for(std::chrono::milliseconds(20)); // ~50 FPS para lógica del juego
@@ -99,7 +99,7 @@ void ThreadManager::paddle1UpdateThread() {
             prevX = currentX;
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS para respuesta rápida
+        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // 60 FPS para respuesta rápida
     }
 }
 
@@ -119,7 +119,7 @@ void ThreadManager::paddle2UpdateThread() {
             prevX = currentX;
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS para respuesta rápida
+        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // 60 FPS para respuesta rápida
     }
 }
 
@@ -141,7 +141,7 @@ void ThreadManager::ballUpdateThread() {
             prevY = currentY;
         }
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // ~50 FPS, más responsivo
+        std::this_thread::sleep_for(std::chrono::milliseconds(20)); // 50 FPS, más responsivo
     }
 }
 
@@ -162,12 +162,12 @@ void ThreadManager::masterRenderThread() {
             const int blockCols = 10;
             const int blockWidth = 3;
             int startXBlocks = (COLS - blockCols * blockWidth) / 2;
-            renderer.renderBlocks(game->getBlocks(), startXBlocks, 3);
+            renderer.renderBlocks(game->getBlocks(), startXBlocks, 5);
         }
         
-        // Aplicar todos los cambios acumulados a la pantalla de forma atómica
+        // Aplicar cambios acumulados a la pantalla
         gameSync->flushChangesToScreen();
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(33)); // ~30 FPS para elementos estáticos
+        std::this_thread::sleep_for(std::chrono::milliseconds(33)); // 30 FPS para elementos estáticos
     }
 }

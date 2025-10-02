@@ -1,7 +1,7 @@
 #include "Ball.h"
 
 Ball::Ball(int startX, int startY) : x(startX), y(startY), velocityX(0), velocityY(-1), visible(true), 
-                                    moveInterval(std::chrono::milliseconds(120)) {
+                                    moveInterval(std::chrono::milliseconds(50)) {
     lastMoveTime = std::chrono::steady_clock::now();
 }
 
@@ -41,4 +41,8 @@ bool Ball::shouldMove() {
 
 void Ball::resetMoveTimer() {
     lastMoveTime = std::chrono::steady_clock::now();
+}
+
+void Ball::setMoveSpeed(int milliseconds) {
+    moveInterval = std::chrono::milliseconds(milliseconds);
 }
